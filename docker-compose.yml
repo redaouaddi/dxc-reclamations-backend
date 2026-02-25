@@ -1,0 +1,19 @@
+
+services:
+  # Nom du service (utilisé par Docker)
+  db-gdr:
+    image: postgres:16-alpine # Image légère et moderne
+    container_name: gdr_postgres_container
+    restart: always
+    environment:
+      # Ces informations seront utilisées dans votre application Spring Boot
+      - POSTGRES_USER=admin_gdr
+      - POSTGRES_PASSWORD=password_gdr
+      - POSTGRES_DB=db_reclamations
+    ports:
+      - "5433:5432" # "Port_PC:Port_Docker"
+    volumes:
+      - db_data:/var/lib/postgresql/data # Pour ne pas perdre les données si le container s'arrête
+
+volumes:
+  db_data:
