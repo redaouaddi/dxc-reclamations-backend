@@ -6,7 +6,7 @@ services:
     container_name: gdr_postgres_container
     restart: always
     environment:
-      # Ces informations seront utilisées dans votre application Spring Boot
+      # Ces informations seront utilisées dans l'application Spring Boot
       - POSTGRES_USER=admin_gdr
       - POSTGRES_PASSWORD=password_gdr
       - POSTGRES_DB=db_reclamations
