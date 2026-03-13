@@ -9,7 +9,10 @@ import java.util.Set;
 public class CreateUserRequest {
 
     @NotBlank
-    private String username;
+    private String firstName;
+
+    @NotBlank
+    private String lastName;
 
     @Email
     @NotBlank
@@ -18,15 +21,34 @@ public class CreateUserRequest {
     @NotBlank
     private String password;
 
+    @NotBlank
+    private String gender; // MASCULIN or FEMININ
+
     @NotEmpty
     private Set<String> roles;
 
-    public String getUsername() {
-        return username;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public String getEmail() {

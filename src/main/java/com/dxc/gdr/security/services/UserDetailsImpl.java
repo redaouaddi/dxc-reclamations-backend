@@ -12,17 +12,16 @@ import java.util.stream.Collectors;
 
 public class UserDetailsImpl implements UserDetails {
     private Long id;
-    private String username;
+
     private String email;
     @JsonIgnore
     private String password;
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String username, String email, String password,
+    public UserDetailsImpl(Long id, String email, String password,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
-        this.username = username;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
@@ -30,12 +29,16 @@ public class UserDetailsImpl implements UserDetails {
 
     public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                .flatMap(access -> {
+                    var accessAuthority = new SimpleGrantedAuthority(access.getName());
+                    var permissionAuthorities = access.getPermissions().stream()
+                            .map(p -> new SimpleGrantedAuthority(p.name()));
+                    return java.util.stream.Stream.concat(java.util.stream.Stream.of(accessAuthority), permissionAuthorities);
+                })
                 .collect(Collectors.toList());
 
         return new UserDetailsImpl(
                 user.getId(),
-                user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
                 authorities);
@@ -51,7 +54,7 @@ public class UserDetailsImpl implements UserDetails {
     public String getPassword() { return password; }
 
     @Override
-    public String getUsername() { return username; }
+    public String getUsername() { return email; }
 
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }

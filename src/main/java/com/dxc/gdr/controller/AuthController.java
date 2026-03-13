@@ -32,7 +32,7 @@ public class AuthController {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
+                        loginRequest.getEmail(),
                         loginRequest.getPassword()
                 )
         );
@@ -45,12 +45,12 @@ public class AuthController {
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
+                .filter(auth -> auth.startsWith("ROLE_")) // Only show Roles in the response
                 .collect(Collectors.toList());
 
         JwtResponse response = new JwtResponse(
                 jwt,
                 userDetails.getId(),
-                userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles
         );

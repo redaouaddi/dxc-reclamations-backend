@@ -19,7 +19,7 @@ public class JwtUtils {
     @Value("${gdr.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    // Générer le token à partir du nom d'utilisateur
+    // Générer le token à partir de l'email
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
