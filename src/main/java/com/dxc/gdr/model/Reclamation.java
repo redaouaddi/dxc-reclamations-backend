@@ -1,0 +1,143 @@
+package com.dxc.gdr.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "reclamations")
+public class Reclamation {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "numero_reclamation", nullable = false, unique = true, length = 30)
+    private String numeroReclamation;
+
+    @Column(nullable = false, length = 150)
+    private String titre;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReclamationCategory categorie;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReclamationPriority priorite;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReclamationStatus statut;
+
+    @Column(nullable = false)
+    private LocalDateTime dateCreation;
+
+    @Column(nullable = false)
+    private LocalDateTime dateMiseAJour;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    private User client;
+
+    // ===== CONSTRUCTEURS =====
+
+    public Reclamation() {
+    }
+
+    public Reclamation(Long id, String numeroReclamation, String titre, String description,
+                       ReclamationCategory categorie, ReclamationPriority priorite,
+                       ReclamationStatus statut, LocalDateTime dateCreation,
+                       LocalDateTime dateMiseAJour, User client) {
+        this.id = id;
+        this.numeroReclamation = numeroReclamation;
+        this.titre = titre;
+        this.description = description;
+        this.categorie = categorie;
+        this.priorite = priorite;
+        this.statut = statut;
+        this.dateCreation = dateCreation;
+        this.dateMiseAJour = dateMiseAJour;
+        this.client = client;
+    }
+
+    // ===== GETTERS & SETTERS =====
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNumeroReclamation() {
+        return numeroReclamation;
+    }
+
+    public void setNumeroReclamation(String numeroReclamation) {
+        this.numeroReclamation = numeroReclamation;
+    }
+
+    public String getTitre() {
+        return titre;
+    }
+
+    public void setTitre(String titre) {
+        this.titre = titre;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public ReclamationCategory getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(ReclamationCategory categorie) {
+        this.categorie = categorie;
+    }
+
+    public ReclamationPriority getPriorite() {
+        return priorite;
+    }
+
+    public void setPriorite(ReclamationPriority priorite) {
+        this.priorite = priorite;
+    }
+
+    public ReclamationStatus getStatut() {
+        return statut;
+    }
+
+    public void setStatut(ReclamationStatus statut) {
+        this.statut = statut;
+    }
+
+    public LocalDateTime getDateCreation() {
+        return dateCreation;
+    }
+
+    public void setDateCreation(LocalDateTime dateCreation) {
+        this.dateCreation = dateCreation;
+    }
+
+    public LocalDateTime getDateMiseAJour() {
+        return dateMiseAJour;
+    }
+
+    public void setDateMiseAJour(LocalDateTime dateMiseAJour) {
+        this.dateMiseAJour = dateMiseAJour;
+    }
+
+    public User getClient() {
+        return client;
+    }
+
+    public void setClient(User client) {
+        this.client = client;
+    }
+}
