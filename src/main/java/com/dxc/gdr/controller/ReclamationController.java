@@ -40,4 +40,9 @@ public class ReclamationController {
                                                           Authentication authentication) {
         return reclamationService.getReclamationStatus(numeroReclamation, authentication.getName());
     }
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public long countReclamations() {
+        return reclamationService.countReclamations();
+    }
 }

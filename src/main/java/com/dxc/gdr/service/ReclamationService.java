@@ -7,6 +7,7 @@ import com.dxc.gdr.Dto.response.ReclamationStatusResponse;
 import java.util.List;
 
 public interface ReclamationService {
+    long countReclamations();
 
     ReclamationResponse createReclamation(CreateReclamationRequest request, String userEmail);
 

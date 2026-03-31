@@ -34,7 +34,10 @@ public class User {
     @NotBlank
     @Size(max = 50)
     @Email
-    @Pattern(regexp = "^[\\w.+-]+@dxc\\.com$", message = "L'email doit être un email DXC (@dxc.com)")
+    @Pattern(
+            regexp = "^[A-Za-z0-9._%+-]+@(dxc\\.com|gmail\\.com)$",
+            message = "L'email doit être un email DXC (@dxc.com) ou Gmail (@gmail.com)"
+    )
     private String email;
 
     @NotBlank

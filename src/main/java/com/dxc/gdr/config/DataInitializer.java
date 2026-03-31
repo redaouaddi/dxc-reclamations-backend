@@ -31,16 +31,36 @@ public class DataInitializer implements CommandLineRunner {
         // ─────────────────────────────────────────────────────────────
 
         // CLIENT : peut lire et créer ses propres réclamations
-        createAccessIfAbsent("ROLE_CLIENT", Set.of(READ_CLAIMS, WRITE_CLAIMS));
+        createAccessIfAbsent("ROLE_CLIENT", Set.of(
+                LIRE_RECLAMATIONS,
+                CREER_RECLAMATIONS
+        ));
 
-        // AGENT : traite les réclamations assignées
-        createAccessIfAbsent("ROLE_AGENT", Set.of(READ_CLAIMS, WRITE_CLAIMS, ASSIGN_CLAIMS));
+// AGENT : traite les réclamations assignées
+        createAccessIfAbsent("ROLE_AGENT", Set.of(
+                LIRE_RECLAMATIONS,
+                CREER_RECLAMATIONS,
+                MODIFIER_RECLAMATIONS,
+                ASSIGNER_RECLAMATIONS
+        ));
 
-        // SERVICE_MANAGER : supervise les agents et réclamations
-        createAccessIfAbsent("ROLE_SERVICE_MANAGER", Set.of(READ_CLAIMS, WRITE_CLAIMS, ASSIGN_CLAIMS, DELETE_CLAIMS, VIEW_REPORTS));
+// SERVICE_MANAGER : supervise les agents et réclamations
+        createAccessIfAbsent("ROLE_SERVICE_MANAGER", Set.of(
+                LIRE_RECLAMATIONS,
+                CREER_RECLAMATIONS,
+                MODIFIER_RECLAMATIONS,
+                SUPPRIMER_RECLAMATIONS,
+                ASSIGNER_RECLAMATIONS,
+                CONSULTER_RAPPORTS
+        ));
 
-        // MANAGER : vue globale + rapports
-        createAccessIfAbsent("ROLE_MANAGER", Set.of(READ_CLAIMS, READ_USERS, VIEW_REPORTS));
+// MANAGER : vue globale + gestion utilisateurs + rapports
+        createAccessIfAbsent("ROLE_MANAGER", Set.of(
+                LIRE_RECLAMATIONS,
+                LIRE_UTILISATEURS,
+                MODIFIER_UTILISATEURS,
+                CONSULTER_RAPPORTS
+        ));
 
         // ADMIN : accès total
         createAccessIfAbsent("ROLE_ADMIN", Set.of(EPermission.values()));

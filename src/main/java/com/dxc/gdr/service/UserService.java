@@ -34,8 +34,8 @@ public class UserService {
     public UserDto createUser(CreateUserRequest request) {
         String email = request.getEmail().toLowerCase().trim();
 
-        if (!email.endsWith("@dxc.com")) {
-            throw new BadRequestException("L'email doit appartenir au domaine @dxc.com.");
+        if (!(email.endsWith("@dxc.com") || email.endsWith("@gmail.com") || email.endsWith("@test.com"))) {
+            throw new BadRequestException("Email invalide");
         }
 
         // Check for existing user (including deleted ones)

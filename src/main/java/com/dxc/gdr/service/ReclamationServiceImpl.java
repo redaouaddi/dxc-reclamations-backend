@@ -9,8 +9,11 @@ import com.dxc.gdr.common.exception.UnauthorizedException;
 import com.dxc.gdr.dao.ReclamationRepository;
 import com.dxc.gdr.dao.UserRepository;
 import com.dxc.gdr.mapper.ReclamationMapper;
-import com.dxc.gdr.model.*;
-import lombok.RequiredArgsConstructor;
+import com.dxc.gdr.model.Reclamation;
+import com.dxc.gdr.model.ReclamationCategory;
+import com.dxc.gdr.model.ReclamationPriority;
+import com.dxc.gdr.model.ReclamationStatus;
+import com.dxc.gdr.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,20 +22,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class ReclamationServiceImpl implements ReclamationService {
 
     private final ReclamationRepository reclamationRepository;
     private final UserRepository userRepository;
     private final ReclamationMapper reclamationMapper;
+    private final EmailService emailService;
+
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   UserRepository userRepository,
-                                  ReclamationMapper reclamationMapper) {
+                                  ReclamationMapper reclamationMapper,
+                                  EmailService emailService) {
         this.reclamationRepository = reclamationRepository;
         this.userRepository = userRepository;
         this.reclamationMapper = reclamationMapper;
+        this.emailService = emailService;
     }
+
     @Override
     public ReclamationResponse createReclamation(CreateReclamationRequest request, String userEmail) {
 
@@ -52,6 +59,16 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setClient(client);
 
         Reclamation saved = reclamationRepository.save(reclamation);
+
+        try {
+            emailService.sendReclamationAcknowledgment(
+                    client.getEmail(),
+                    client.getFirstName(),
+                    saved.getNumeroReclamation()
+            );
+        } catch (Exception e) {
+            System.out.println("ERREUR ENVOI EMAIL : " + e.getMessage());
+        }
 
         return reclamationMapper.toResponse(saved);
     }
@@ -79,6 +96,11 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         return reclamationMapper.toStatusResponse(reclamation);
+    }
+
+    @Override
+    public long countReclamations() {
+        return reclamationRepository.count();
     }
 
     private String generateNumeroReclamation() {
