@@ -41,7 +41,7 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
-    public ReclamationResponse createReclamation(CreateReclamationRequest request, String userEmail) {
+    public ReclamationResponse createReclamation(CreateReclamationRequest request, org.springframework.web.multipart.MultipartFile file, String userEmail) {
 
         User client = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
@@ -58,13 +58,34 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setClient(client);
 
+        if (ReclamationCategory.MAINTENANCE.equals(reclamation.getCategorie())) {
+            reclamation.setTypeMaintenance(request.getTypeMaintenance());
+            if ("INCIDENT".equals(request.getTypeMaintenance())) {
+                reclamation.setSousCategorieIncident(request.getSousCategorieIncident());
+                if ("AUTRE".equals(request.getSousCategorieIncident())) {
+                    reclamation.setDetailsAutreIncident(request.getDetailsAutreIncident());
+                }
+            }
+        }
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                reclamation.setAttachmentName(file.getOriginalFilename());
+                reclamation.setAttachmentData(file.getBytes());
+            } catch (java.io.IOException e) {
+                throw new BadRequestException("Erreur de sauvegarde de fichier");
+            }
+        }
+
         Reclamation saved = reclamationRepository.save(reclamation);
 
         try {
             emailService.sendReclamationAcknowledgment(
                     client.getEmail(),
                     client.getFirstName(),
-                    saved.getNumeroReclamation()
+                    saved.getNumeroReclamation(),
+                    saved.getAttachmentData(),
+                    saved.getAttachmentName()
             );
         } catch (Exception e) {
             System.out.println("ERREUR ENVOI EMAIL : " + e.getMessage());

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,11 +22,12 @@ public class ReclamationController {
     public ReclamationController(ReclamationService reclamationService) {
         this.reclamationService = reclamationService;
     }
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasRole('CLIENT')")
-    public ReclamationResponse createReclamation(@Valid @RequestBody CreateReclamationRequest request,
+    public ReclamationResponse createReclamation(@ModelAttribute @Valid CreateReclamationRequest request,
+                                                 @RequestParam(value = "file", required = false) MultipartFile file,
                                                  Authentication authentication) {
-        return reclamationService.createReclamation(request, authentication.getName());
+        return reclamationService.createReclamation(request, file, authentication.getName());
     }
 
     @GetMapping("/mes-reclamations")

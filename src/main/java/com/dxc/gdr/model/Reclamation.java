@@ -42,6 +42,22 @@ public class Reclamation {
     @JoinColumn(name = "client_id", nullable = false)
     private User client;
 
+    @Column(name = "type_maintenance")
+    private String typeMaintenance;
+
+    @Column(name = "sous_categorie_incident")
+    private String sousCategorieIncident;
+
+    @Column(name = "details_autre_incident")
+    private String detailsAutreIncident;
+
+    @Column(name = "attachment_name")
+    private String attachmentName;
+
+    @Lob
+    @Column(name = "attachment_data")
+    private byte[] attachmentData;
+
     // ===== CONSTRUCTEURS =====
 
     public Reclamation() {
@@ -139,5 +155,45 @@ public class Reclamation {
 
     public void setClient(User client) {
         this.client = client;
+    }
+
+    public String getTypeMaintenance() {
+        return typeMaintenance;
+    }
+
+    public void setTypeMaintenance(String typeMaintenance) {
+        this.typeMaintenance = typeMaintenance;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public byte[] getAttachmentData() {
+        return attachmentData;
+    }
+
+    public void setAttachmentData(byte[] attachmentData) {
+        this.attachmentData = attachmentData;
+    }
+
+    public String getSousCategorieIncident() {
+        return sousCategorieIncident;
+    }
+
+    public void setSousCategorieIncident(String sousCategorieIncident) {
+        this.sousCategorieIncident = sousCategorieIncident;
+    }
+
+    public String getDetailsAutreIncident() {
+        return detailsAutreIncident;
+    }
+
+    public void setDetailsAutreIncident(String detailsAutreIncident) {
+        this.detailsAutreIncident = detailsAutreIncident;
     }
 }

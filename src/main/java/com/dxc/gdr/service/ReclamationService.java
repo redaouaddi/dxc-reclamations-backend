@@ -9,7 +9,7 @@ import java.util.List;
 public interface ReclamationService {
     long countReclamations();
 
-    ReclamationResponse createReclamation(CreateReclamationRequest request, String userEmail);
+    ReclamationResponse createReclamation(CreateReclamationRequest request, org.springframework.web.multipart.MultipartFile file, String userEmail);
 
     List<ReclamationResponse> getMyReclamations(String userEmail);
 
