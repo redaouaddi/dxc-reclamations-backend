@@ -50,4 +50,25 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Erreur de construction de l'email : " + e.getMessage());
         }
     }
-}
+
+    @Override
+    public void sendAssignmentNotification(String chefEmail, String teamName, String numeroReclamation, String titre) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(chefEmail);
+            message.setSubject("Nouvelle réclamation assignée à votre équipe : " + teamName);
+            message.setText(
+                    "Bonjour,\n\n" +
+                            "La réclamation n° " + numeroReclamation + " (« " + titre + " ») a été assignée à votre équipe (" + teamName + ") par le Service Manager.\n\n" +
+                            "Vous pouvez désormais commencer le traitement via votre tableau de bord.\n\n" +
+                            "Cordialement,\n" +
+                            "Le système de gestion des réclamations DXC"
+            );
+            mailSender.send(message);
+            System.out.println("NOTIFICATION ENVOYÉE AU CHEF DE : " + teamName + " / " + chefEmail);
+        } catch (Exception e) {
+            System.err.println("Erreur d'envoi de notification d'assignation : " + e.getMessage());
+        }
+    }
+}

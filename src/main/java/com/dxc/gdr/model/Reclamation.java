@@ -58,6 +58,14 @@ public class Reclamation {
     @Column(name = "attachment_data")
     private byte[] attachmentData;
 
+    @Column(name = "motif_refus", length = 500)
+    private String motifRefus;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipe_assignee_id")
+    private Equipe equipeAssignee;
+
+
     // ===== CONSTRUCTEURS =====
 
     public Reclamation() {
@@ -196,4 +204,21 @@ public class Reclamation {
     public void setDetailsAutreIncident(String detailsAutreIncident) {
         this.detailsAutreIncident = detailsAutreIncident;
     }
+
+    public Equipe getEquipeAssignee() {
+        return equipeAssignee;
+    }
+
+    public void setEquipeAssignee(Equipe equipeAssignee) {
+        this.equipeAssignee = equipeAssignee;
+    }
+
+    public String getMotifRefus() {
+        return motifRefus;
+    }
+
+    public void setMotifRefus(String motifRefus) {
+        this.motifRefus = motifRefus;
+    }
 }
+

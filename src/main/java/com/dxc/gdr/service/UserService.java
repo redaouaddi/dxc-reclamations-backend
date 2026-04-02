@@ -83,6 +83,26 @@ public class UserService {
         return userMapper.toDto(saved);
     }
 
+    public UserDto updateUser(Long id, com.dxc.gdr.Dto.request.UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable."));
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail().toLowerCase().trim());
+        user.setGender(com.dxc.gdr.model.Gender.valueOf(request.getGender().toUpperCase()));
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        user.setRoles(accessResolver.resolveAccesses(request.getRoles()));
+
+        User saved = userRepository.save(user);
+        return userMapper.toDto(saved);
+    }
+
+
     public List<UserDto> getAll() {
         return userRepository.findAll().stream()
                 .map(userMapper::toDto)

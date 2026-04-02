@@ -14,4 +14,15 @@ public interface ReclamationService {
     List<ReclamationResponse> getMyReclamations(String userEmail);
 
     ReclamationStatusResponse getReclamationStatus(String numeroReclamation, String userEmail);
+
+    List<ReclamationResponse> getNouvellesReclamations();
+
+    ReclamationResponse getReclamationDetails(String numeroReclamation);
+
+    ReclamationResponse assignerEquipe(String numeroReclamation, Long idEquipe);
+    List<ReclamationResponse> getAllReclamations();
+    ReclamationResponse rejeterReclamation(String numeroReclamation, String motif, String chefEmail);
 }
+
+
+

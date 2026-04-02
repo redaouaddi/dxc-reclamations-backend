@@ -30,6 +30,12 @@ public class ReclamationController {
         return reclamationService.createReclamation(request, file, authentication.getName());
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('CONSULTER_RAPPORTS')")
+    public List<ReclamationResponse> getAllReclamations() {
+        return reclamationService.getAllReclamations();
+    }
+
     @GetMapping("/mes-reclamations")
     @PreAuthorize("hasRole('CLIENT')")
     public List<ReclamationResponse> getMyReclamations(Authentication authentication) {
@@ -43,8 +49,40 @@ public class ReclamationController {
         return reclamationService.getReclamationStatus(numeroReclamation, authentication.getName());
     }
     @GetMapping("/count")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('CONSULTER_RAPPORTS')")
     public long countReclamations() {
         return reclamationService.countReclamations();
     }
+
+    @GetMapping("/nouvelles")
+    @PreAuthorize("hasAuthority('VOIR_NOUVELLES_RECLAMATIONS') or hasRole('ADMIN')")
+    public List<ReclamationResponse> getNouvellesReclamations() {
+        return reclamationService.getNouvellesReclamations();
+    }
+
+    @GetMapping("/{numeroReclamation}")
+    @PreAuthorize("hasAuthority('ASSIGNER_RECLAMATIONS') or hasRole('ADMIN')")
+    public ReclamationResponse getReclamationDetails(@PathVariable String numeroReclamation) {
+        return reclamationService.getReclamationDetails(numeroReclamation);
+    }
+
+
+    @PutMapping("/{numeroReclamation}/assigner-equipe")
+    @PreAuthorize("hasAuthority('ASSIGNER_RECLAMATIONS') or hasRole('ADMIN')")
+    public ReclamationResponse assignerEquipe(
+            @PathVariable String numeroReclamation,
+            @RequestParam Long idEquipe) {
+        return reclamationService.assignerEquipe(numeroReclamation, idEquipe);
+    }
+
+    @PutMapping("/{numeroReclamation}/rejeter")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('ADMIN')")
+    public ReclamationResponse rejeterReclamation(
+            @PathVariable String numeroReclamation,
+            @RequestParam String motif,
+            Authentication authentication) {
+        return reclamationService.rejeterReclamation(numeroReclamation, motif, authentication.getName());
+    }
 }
+
+

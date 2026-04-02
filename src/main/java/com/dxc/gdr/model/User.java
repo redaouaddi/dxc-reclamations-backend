@@ -62,6 +62,12 @@ public class User {
     )
     private Set<Access> roles = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipe_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Equipe equipe;
+
+
     public User() {
     }
 
@@ -163,5 +169,13 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public Equipe getEquipe() {
+        return equipe;
+    }
+
+    public void setEquipe(Equipe equipe) {
+        this.equipe = equipe;
     }
 }

@@ -13,13 +13,17 @@ public class ReclamationResponse {
     private String statut;
     private LocalDateTime dateCreation;
     private LocalDateTime dateMiseAJour;
+    private String equipeAssignee;
+    private String clientNom;
+    private String motifRefus;
 
     public ReclamationResponse() {
     }
 
     public ReclamationResponse(Long id, String numeroReclamation, String titre, String description,
                                String categorie, String priorite, String statut,
-                               LocalDateTime dateCreation, LocalDateTime dateMiseAJour) {
+                               LocalDateTime dateCreation, LocalDateTime dateMiseAJour,
+                               String motifRefus) {
         this.id = id;
         this.numeroReclamation = numeroReclamation;
         this.titre = titre;
@@ -29,7 +33,9 @@ public class ReclamationResponse {
         this.statut = statut;
         this.dateCreation = dateCreation;
         this.dateMiseAJour = dateMiseAJour;
+        this.motifRefus = motifRefus;
     }
+
 
     public Long getId() {
         return id;
@@ -100,4 +106,28 @@ public class ReclamationResponse {
     public void setDateMiseAJour(LocalDateTime dateMiseAJour) {
         this.dateMiseAJour = dateMiseAJour;
     }
-}
+
+    public String getEquipeAssignee() {
+        return equipeAssignee;
+    }
+
+    public void setEquipeAssignee(String equipeAssignee) {
+        this.equipeAssignee = equipeAssignee;
+    }
+
+    public String getClientNom() {
+        return clientNom;
+    }
+
+    public void setClientNom(String clientNom) {
+        this.clientNom = clientNom;
+    }
+
+    public String getMotifRefus() {
+        return motifRefus;
+    }
+
+    public void setMotifRefus(String motifRefus) {
+        this.motifRefus = motifRefus;
+    }
+}

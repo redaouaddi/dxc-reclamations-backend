@@ -13,4 +13,7 @@ public interface ReclamationRepository extends JpaRepository<Reclamation, Long> 
     List<Reclamation> findByClientIdOrderByDateCreationDesc(Long clientId);
 
     boolean existsByNumeroReclamation(String numeroReclamation);
+
+    List<Reclamation> findByStatutInOrderByDateCreationDesc(java.util.Collection<com.dxc.gdr.model.ReclamationStatus> statuts);
 }
+

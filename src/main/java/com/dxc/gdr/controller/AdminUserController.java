@@ -11,8 +11,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
+
 
     private final UserService userService;
 
@@ -21,21 +21,33 @@ public class AdminUserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CREER_UTILISATEURS') or hasRole('ADMIN')")
     public UserDto createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.createUser(request);
     }
 
+
     @PutMapping("/{id}/roles")
+    @PreAuthorize("hasAuthority('MODIFIER_UTILISATEURS') or hasRole('ADMIN')")
     public UserDto updateRoles(@PathVariable Long id, @Valid @RequestBody UserDto dto) {
         return userService.updateRoles(id, dto);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('MODIFIER_UTILISATEURS') or hasRole('ADMIN')")
+    public UserDto updateUser(@PathVariable Long id, @Valid @RequestBody com.dxc.gdr.Dto.request.UpdateUserRequest request) {
+        return userService.updateUser(id, request);
+    }
+
+
     @GetMapping
+    @PreAuthorize("hasAuthority('LIRE_UTILISATEURS') or hasRole('ADMIN')")
     public List<UserDto> getAll() {
         return userService.getAll();
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('SUPPRIMER_UTILISATEURS') or hasRole('ADMIN')")
     public void deleteUser(@PathVariable Long id) {
         userService.softDelete(id);
     }

@@ -8,6 +8,7 @@ import com.dxc.gdr.model.Gender;
 import com.dxc.gdr.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -22,44 +23,45 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private PasswordEncoder encoder;
     @Autowired private AccessRepository accessRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) throws Exception {
+
+        // FIX : Supprimer la contrainte de check sur l'enum si elle bloque les nouvelles permissions (PostgreSQL)
+        try {
+            jdbcTemplate.execute("ALTER TABLE access_permissions DROP CONSTRAINT IF EXISTS access_permissions_permission_check");
+        } catch (Exception e) {
+            System.out.println("ℹ️ Info : Pas de contrainte à supprimer ou erreur SQL mineure : " + e.getMessage());
+        }
 
         // ─────────────────────────────────────────────────────────────
         // 1. ACCÈS (RÔLES) — noms stockés avec ROLE_ (convention Spring)
         // ─────────────────────────────────────────────────────────────
 
-        // CLIENT : peut lire et créer ses propres réclamations
+        // CLIENT
         createAccessIfAbsent("ROLE_CLIENT", Set.of(
                 LIRE_RECLAMATIONS,
                 CREER_RECLAMATIONS
         ));
 
-// AGENT : traite les réclamations assignées
+        // AGENT
         createAccessIfAbsent("ROLE_AGENT", Set.of(
                 LIRE_RECLAMATIONS,
-                CREER_RECLAMATIONS,
-                MODIFIER_RECLAMATIONS,
-                ASSIGNER_RECLAMATIONS
+                MODIFIER_RECLAMATIONS
         ));
 
-// SERVICE_MANAGER : supervise les agents et réclamations
+        // SERVICE_MANAGER
         createAccessIfAbsent("ROLE_SERVICE_MANAGER", Set.of(
                 LIRE_RECLAMATIONS,
-                CREER_RECLAMATIONS,
-                MODIFIER_RECLAMATIONS,
-                SUPPRIMER_RECLAMATIONS,
                 ASSIGNER_RECLAMATIONS,
-                CONSULTER_RAPPORTS
+                VOIR_NOUVELLES_RECLAMATIONS
         ));
 
-// MANAGER : vue globale + gestion utilisateurs + rapports
-        createAccessIfAbsent("ROLE_MANAGER", Set.of(
+        // CHEF_EQUIPE
+        createAccessIfAbsent("ROLE_CHEF_EQUIPE", Set.of(
                 LIRE_RECLAMATIONS,
-                LIRE_UTILISATEURS,
-                MODIFIER_UTILISATEURS,
-                CONSULTER_RAPPORTS
+                GERER_EQUIPE
         ));
 
         // ADMIN : accès total
@@ -91,7 +93,6 @@ public class DataInitializer implements CommandLineRunner {
                 access -> {
                     if (access.isDeleted()) {
                         access.setDeleted(false);
-                        System.out.println("♻️ Access réactivé : " + name);
                     }
                     access.setPermissions(new HashSet<>(permissions));
                     accessRepository.save(access);
