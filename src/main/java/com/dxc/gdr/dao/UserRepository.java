@@ -12,5 +12,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdAndDeletedFalse(Long id);
 
     java.util.List<User> findByEquipeIsNullAndDeletedFalse();
+    
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.equipe IS NULL AND u.deleted = false")
+    java.util.List<User> findByRoleAndEquipeIsNull(@org.springframework.data.repository.query.Param("roleName") String roleName);
 }
 

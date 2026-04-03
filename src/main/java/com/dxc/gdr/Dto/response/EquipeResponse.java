@@ -17,6 +17,15 @@ public class EquipeResponse {
         private String nom;
         private String email;
 
+        public AgentResponse() {}
+
+        public AgentResponse(Long id, String prenom, String nom, String email) {
+            this.id = id;
+            this.prenom = prenom;
+            this.nom = nom;
+            this.email = email;
+        }
+
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
 

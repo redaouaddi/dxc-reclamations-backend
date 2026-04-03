@@ -22,6 +22,10 @@ public interface ReclamationService {
     ReclamationResponse assignerEquipe(String numeroReclamation, Long idEquipe);
     List<ReclamationResponse> getAllReclamations();
     ReclamationResponse rejeterReclamation(String numeroReclamation, String motif, String chefEmail);
+
+    List<ReclamationResponse> getReclamationsParEquipe(Long equipeId);
+    ReclamationResponse accepterReclamation(String numeroReclamation);
+    ReclamationResponse marquerResolue(String numeroReclamation);
 }
 
 

@@ -39,7 +39,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur interne du serveur.", req.getRequestURI(), null);
+        if (ex instanceof org.springframework.security.access.AccessDeniedException) {
+            return build(HttpStatus.FORBIDDEN, "Accès refusé. Vous n'avez pas les permissions nécessaires.", req.getRequestURI(), null);
+        }
+        if (ex instanceof org.springframework.security.core.AuthenticationException) {
+            return build(HttpStatus.UNAUTHORIZED, "Email ou mot de passe incorrect.", req.getRequestURI(), null);
+        }
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur interne du serveur. " + ex.getMessage(), req.getRequestURI(), null);
     }
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message, String path, Map<String, String> validation) {

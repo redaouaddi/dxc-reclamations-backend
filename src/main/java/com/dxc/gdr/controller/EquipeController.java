@@ -51,7 +51,7 @@ public class EquipeController {
 
 
     @GetMapping("/ma-gestion")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('SERVICE_MANAGER') or hasRole('CHEF_EQUIPE') or hasRole('AGENT')")
     public EquipeResponse getMonEquipe(Authentication authentication) {
         return equipeService.getMonEquipe(authentication.getName());
     }
@@ -59,7 +59,7 @@ public class EquipeController {
     // ─── CHEF_EQUIPE : Modifier le nom du service ────────────────────────────
 
     @PutMapping("/ma-gestion")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('SERVICE_MANAGER') or hasRole('CHEF_EQUIPE')")
     public EquipeResponse mettreAJourNom(Authentication authentication,
                                           @RequestBody @Valid UpdateEquipeRequest request) {
         return equipeService.mettreAJourNom(authentication.getName(), request);
@@ -68,7 +68,7 @@ public class EquipeController {
     // ─── CHEF_EQUIPE : Ajouter un agent libre ─────────────────────────────────
 
     @PostMapping("/ma-gestion/agents/{agentId}")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('SERVICE_MANAGER') or hasRole('CHEF_EQUIPE')")
     public EquipeResponse ajouterAgent(Authentication authentication,
                                         @PathVariable Long agentId) {
         return equipeService.ajouterAgent(authentication.getName(), agentId);
@@ -77,7 +77,7 @@ public class EquipeController {
     // ─── CHEF_EQUIPE : Retirer un agent ───────────────────────────────────────
 
     @DeleteMapping("/ma-gestion/agents/{agentId}")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('SERVICE_MANAGER') or hasRole('CHEF_EQUIPE')")
     public EquipeResponse retirerAgent(Authentication authentication,
                                         @PathVariable Long agentId) {
         return equipeService.retirerAgent(authentication.getName(), agentId);
@@ -86,7 +86,7 @@ public class EquipeController {
     // ─── Agents libres (sans équipe) ──────────────────────────────────────────
 
     @GetMapping("/agents-libres")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasAuthority('CREER_EQUIPE') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('SERVICE_MANAGER') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasAuthority('CREER_EQUIPE') or hasRole('ADMIN')")
     public List<EquipeResponse.AgentResponse> listerAgentsLibres() {
         return equipeService.listerAgentsLibres();
     }

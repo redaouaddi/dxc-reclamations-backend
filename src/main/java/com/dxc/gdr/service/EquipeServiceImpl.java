@@ -82,12 +82,21 @@ public class EquipeServiceImpl implements EquipeService {
 
     @Override
     @Transactional(readOnly = true)
-    public EquipeResponse getMonEquipe(String chefEmail) {
-        User chef = userRepository.findByEmail(chefEmail)
+    public EquipeResponse getMonEquipe(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
-        Equipe equipe = equipeRepository.findByChefEquipeId(chef.getId())
-                .orElseThrow(() -> new NotFoundException("Aucune équipe ne vous est assignée"));
+        // First check if the user is a Chef
+        Equipe equipe = equipeRepository.findByChefEquipeId(user.getId()).orElse(null);
+        
+        // If not a chef, check if they are a member (Agent)
+        if (equipe == null) {
+            equipe = user.getEquipe();
+        }
+
+        if (equipe == null) {
+            throw new NotFoundException("Aucune équipe ne vous est assignée");
+        }
 
         return toResponse(equipe);
     }
@@ -106,40 +115,33 @@ public class EquipeServiceImpl implements EquipeService {
     @Override
     public EquipeResponse ajouterAgent(String chefEmail, Long agentId) {
         Equipe equipe = getEquipeByChefEmail(chefEmail);
-
         User agent = userRepository.findByIdAndDeletedFalse(agentId)
-                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
 
-        if (agent.getEquipe() != null) {
-            throw new BadRequestException(
-                    "Cet agent fait déjà partie de l'équipe : " + agent.getEquipe().getNom()
-            );
-        }
-
+        // Synchronisation manuelle des deux côtés pour mise à jour immédiate du DTO
         agent.setEquipe(equipe);
-        userRepository.save(agent);
+        if (!equipe.getAgents().contains(agent)) {
+            equipe.getAgents().add(agent);
+        }
+        
+        userRepository.saveAndFlush(agent);
 
-        // Recharger l'équipe pour avoir la liste agents à jour
-        return toResponse(equipeRepository.findById(equipe.getId()).orElseThrow());
+        return toResponse(equipe);
     }
-
-    // ─── CHEF_EQUIPE : Retirer un agent ───────────────────────────────────────
 
     @Override
     public EquipeResponse retirerAgent(String chefEmail, Long agentId) {
         Equipe equipe = getEquipeByChefEmail(chefEmail);
-
         User agent = userRepository.findByIdAndDeletedFalse(agentId)
-                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
 
-        if (agent.getEquipe() == null || !agent.getEquipe().getId().equals(equipe.getId())) {
-            throw new BadRequestException("Cet agent n'appartient pas à votre équipe");
-        }
-
+        // Libération de l'agent et nettoyage de la liste équipe en mémoire
         agent.setEquipe(null);
-        userRepository.save(agent);
+        equipe.getAgents().removeIf(a -> a.getId().equals(agentId));
+        
+        userRepository.saveAndFlush(agent);
 
-        return toResponse(equipeRepository.findById(equipe.getId()).orElseThrow());
+        return toResponse(equipe);
     }
 
     // ─── Agents libres (sans équipe) ──────────────────────────────────────────
@@ -147,10 +149,10 @@ public class EquipeServiceImpl implements EquipeService {
     @Override
     @Transactional(readOnly = true)
     public List<EquipeResponse.AgentResponse> listerAgentsLibres() {
-        return userRepository.findByEquipeIsNullAndDeletedFalse()
+        return userRepository.findByRoleAndEquipeIsNull("ROLE_AGENT")
                 .stream()
                 .map(this::toAgentResponse)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────

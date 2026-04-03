@@ -31,7 +31,7 @@ public class ReclamationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasAuthority('CONSULTER_RAPPORTS')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_MANAGER') or hasAuthority('CONSULTER_RAPPORTS')")
     public List<ReclamationResponse> getAllReclamations() {
         return reclamationService.getAllReclamations();
     }
@@ -76,12 +76,30 @@ public class ReclamationController {
     }
 
     @PutMapping("/{numeroReclamation}/rejeter")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('ADMIN') or hasRole('CHEF_EQUIPE')")
     public ReclamationResponse rejeterReclamation(
             @PathVariable String numeroReclamation,
             @RequestParam String motif,
             Authentication authentication) {
         return reclamationService.rejeterReclamation(numeroReclamation, motif, authentication.getName());
+    }
+
+    @GetMapping("/equipe/{equipeId}")
+    @PreAuthorize("hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
+    public List<ReclamationResponse> getReclamationsParEquipe(@PathVariable Long equipeId) {
+        return reclamationService.getReclamationsParEquipe(equipeId);
+    }
+
+    @PutMapping("/{numeroReclamation}/accepter")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
+    public ReclamationResponse accepterReclamation(@PathVariable String numeroReclamation) {
+        return reclamationService.accepterReclamation(numeroReclamation);
+    }
+
+    @PutMapping("/{numeroReclamation}/resoudre")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
+    public ReclamationResponse marquerResolue(@PathVariable String numeroReclamation) {
+        return reclamationService.marquerResolue(numeroReclamation);
     }
 }
 

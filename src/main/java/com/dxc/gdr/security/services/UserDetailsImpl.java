@@ -29,9 +29,14 @@ public class UserDetailsImpl implements UserDetails {
 
     public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
+                .filter(access -> access != null && access.getName() != null)
                 .flatMap(access -> {
                     var accessAuthority = new SimpleGrantedAuthority(access.getName());
+                    if (access.getPermissions() == null) {
+                        return java.util.stream.Stream.of(accessAuthority);
+                    }
                     var permissionAuthorities = access.getPermissions().stream()
+                            .filter(p -> p != null)
                             .map(p -> new SimpleGrantedAuthority(p.name()));
                     return java.util.stream.Stream.concat(java.util.stream.Stream.of(accessAuthority), permissionAuthorities);
                 })

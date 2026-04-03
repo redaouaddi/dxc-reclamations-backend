@@ -15,5 +15,7 @@ public interface ReclamationRepository extends JpaRepository<Reclamation, Long> 
     boolean existsByNumeroReclamation(String numeroReclamation);
 
     List<Reclamation> findByStatutInOrderByDateCreationDesc(java.util.Collection<com.dxc.gdr.model.ReclamationStatus> statuts);
+
+    @org.springframework.data.jpa.repository.Query(value = "SELECT * FROM reclamations WHERE equipe_assignee_id = :teamId ORDER BY date_creation DESC", nativeQuery = true)
+    List<Reclamation> findAllByTeamId(@org.springframework.data.repository.query.Param("teamId") Long teamId);
 }
-
