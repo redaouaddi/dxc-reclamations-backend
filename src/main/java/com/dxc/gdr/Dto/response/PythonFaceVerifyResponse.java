@@ -4,9 +4,10 @@ public class PythonFaceVerifyResponse {
 
     private boolean success;
     private boolean match;
-    private double hist_score;
-    private double pixel_diff;
-    private double similarity_score;
+    private double distance;
+    private double threshold;
+    private String model;
+    private String detector_backend;
     private String message;
 
     public PythonFaceVerifyResponse() {
@@ -20,16 +21,20 @@ public class PythonFaceVerifyResponse {
         return match;
     }
 
-    public double getHist_score() {
-        return hist_score;
+    public double getDistance() {
+        return distance;
     }
 
-    public double getPixel_diff() {
-        return pixel_diff;
+    public double getThreshold() {
+        return threshold;
     }
 
-    public double getSimilarity_score() {
-        return similarity_score;
+    public String getModel() {
+        return model;
+    }
+
+    public String getDetector_backend() {
+        return detector_backend;
     }
 
     public String getMessage() {
@@ -44,16 +49,20 @@ public class PythonFaceVerifyResponse {
         this.match = match;
     }
 
-    public void setHist_score(double hist_score) {
-        this.hist_score = hist_score;
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 
-    public void setPixel_diff(double pixel_diff) {
-        this.pixel_diff = pixel_diff;
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
     }
 
-    public void setSimilarity_score(double similarity_score) {
-        this.similarity_score = similarity_score;
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setDetector_backend(String detector_backend) {
+        this.detector_backend = detector_backend;
     }
 
     public void setMessage(String message) {

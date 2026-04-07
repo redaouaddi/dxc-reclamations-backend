@@ -63,9 +63,10 @@ public class FaceService {
         }
 
         System.out.println("MATCH = " + body.isMatch());
-        System.out.println("HIST SCORE = " + body.getHist_score());
-        System.out.println("PIXEL DIFF = " + body.getPixel_diff());
-        System.out.println("SIMILARITY SCORE = " + body.getSimilarity_score());
+        System.out.println("DISTANCE = " + body.getDistance());
+        System.out.println("THRESHOLD = " + body.getThreshold());
+        System.out.println("MODEL = " + body.getModel());
+        System.out.println("DETECTOR BACKEND = " + body.getDetector_backend());
 
         return body.isMatch();
     }
