@@ -1,6 +1,6 @@
 package com.dxc.gdr.security.jwt;
 
-import com.dxc.gdr.security.services.UserDetailsServiceImpl;
+import com.dxc.gdr.service.implement.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

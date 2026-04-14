@@ -3,7 +3,7 @@ package com.dxc.gdr.controller;
 import com.dxc.gdr.Dto.request.CreateEquipeRequest;
 import com.dxc.gdr.Dto.request.UpdateEquipeRequest;
 import com.dxc.gdr.Dto.response.EquipeResponse;
-import com.dxc.gdr.service.EquipeService;
+import com.dxc.gdr.service.interfaces.EquipeService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

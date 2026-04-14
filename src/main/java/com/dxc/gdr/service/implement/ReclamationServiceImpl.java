@@ -1,4 +1,4 @@
-package com.dxc.gdr.service;
+package com.dxc.gdr.service.implement;
 
 import com.dxc.gdr.Dto.request.CreateReclamationRequest;
 import com.dxc.gdr.Dto.response.ReclamationResponse;
@@ -16,6 +16,8 @@ import com.dxc.gdr.model.ReclamationCategory;
 import com.dxc.gdr.model.ReclamationPriority;
 import com.dxc.gdr.model.ReclamationStatus;
 import com.dxc.gdr.model.User;
+import com.dxc.gdr.service.interfaces.EmailService;
+import com.dxc.gdr.service.interfaces.ReclamationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +48,9 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
-    public ReclamationResponse createReclamation(CreateReclamationRequest request, org.springframework.web.multipart.MultipartFile file, String userEmail) {
+    public ReclamationResponse createReclamation(CreateReclamationRequest request,
+                                                 org.springframework.web.multipart.MultipartFile file,
+                                                 String userEmail) {
         User client = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
@@ -81,17 +85,28 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         Reclamation saved = reclamationRepository.save(reclamation);
+
         try {
-            emailService.sendReclamationAcknowledgment(
-                    client.getEmail(),
-                    client.getFirstName(),
-                    saved.getNumeroReclamation(),
-                    saved.getAttachmentData(),
-                    saved.getAttachmentName()
-            );
+            System.out.println("Email client = " + client.getEmail());
+
+            if (client.getEmail() != null && !client.getEmail().isBlank()) {
+                emailService.sendReclamationAcknowledgment(
+                        client.getEmail(),
+                        client.getFirstName(),
+                        saved.getNumeroReclamation(),
+                        saved.getAttachmentData(),
+                        saved.getAttachmentName()
+                );
+                System.out.println("EMAIL ACCUSE ENVOYE A : " + client.getEmail());
+            } else {
+                System.err.println("ERREUR ENVOI EMAIL : email client vide ou null");
+            }
+
         } catch (Exception e) {
             System.err.println("ERREUR ENVOI EMAIL : " + e.getMessage());
+            e.printStackTrace();
         }
+
         return reclamationMapper.toResponse(saved);
     }
 
@@ -153,7 +168,12 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         Reclamation saved = reclamationRepository.save(reclamation);
         if (equipe.getChefEquipe() != null) {
-            emailService.sendAssignmentNotification(equipe.getChefEquipe().getEmail(), equipe.getNom(), saved.getNumeroReclamation(), saved.getTitre());
+            emailService.sendAssignmentNotification(
+                    equipe.getChefEquipe().getEmail(),
+                    equipe.getNom(),
+                    saved.getNumeroReclamation(),
+                    saved.getTitre()
+            );
         }
         return reclamationMapper.toResponse(saved);
     }

@@ -1,4 +1,4 @@
-package com.dxc.gdr.service;
+package com.dxc.gdr.service.implement;
 
 import com.dxc.gdr.Dto.request.CreateEquipeRequest;
 import com.dxc.gdr.Dto.request.UpdateEquipeRequest;
@@ -9,6 +9,7 @@ import com.dxc.gdr.dao.EquipeRepository;
 import com.dxc.gdr.dao.UserRepository;
 import com.dxc.gdr.model.Equipe;
 import com.dxc.gdr.model.User;
+import com.dxc.gdr.service.interfaces.EquipeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

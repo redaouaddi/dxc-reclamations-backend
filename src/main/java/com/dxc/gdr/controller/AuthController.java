@@ -3,7 +3,7 @@ package com.dxc.gdr.controller;
 import com.dxc.gdr.Dto.request.LoginRequest;
 import com.dxc.gdr.Dto.response.JwtResponse;
 import com.dxc.gdr.security.jwt.JwtUtils;
-import com.dxc.gdr.security.services.UserDetailsImpl;
+import com.dxc.gdr.service.implement.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -59,4 +59,4 @@ public class AuthController {
     }
 
 }
-
+

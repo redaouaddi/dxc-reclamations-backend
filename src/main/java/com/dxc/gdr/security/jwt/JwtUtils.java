@@ -1,6 +1,6 @@
 package com.dxc.gdr.security.jwt;
 
-import com.dxc.gdr.security.services.UserDetailsImpl;
+import com.dxc.gdr.service.implement.UserDetailsImpl;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

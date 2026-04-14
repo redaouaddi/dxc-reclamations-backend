@@ -1,4 +1,4 @@
-package com.dxc.gdr.service;
+package com.dxc.gdr.service.interfaces;
 
 import com.dxc.gdr.Dto.request.CreateEquipeRequest;
 import com.dxc.gdr.Dto.request.UpdateEquipeRequest;

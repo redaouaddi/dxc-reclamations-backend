@@ -3,9 +3,8 @@ package com.dxc.gdr.controller;
 import com.dxc.gdr.Dto.request.CreateReclamationRequest;
 import com.dxc.gdr.Dto.response.ReclamationResponse;
 import com.dxc.gdr.Dto.response.ReclamationStatusResponse;
-import com.dxc.gdr.service.ReclamationService;
+import com.dxc.gdr.service.interfaces.ReclamationService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -101,6 +100,15 @@ public class ReclamationController {
     public ReclamationResponse marquerResolue(@PathVariable String numeroReclamation) {
         return reclamationService.marquerResolue(numeroReclamation);
     }
+
+    @PostMapping("/json")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ReclamationResponse createReclamationJson(
+            @RequestBody @Valid CreateReclamationRequest request,
+            Authentication authentication) {
+
+        return reclamationService.createReclamation(request, null, authentication.getName());
+    }
 }
 
-
+
