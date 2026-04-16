@@ -42,7 +42,7 @@ public class ReclamationController {
     }
 
     @GetMapping("/mes-missions")
-    @PreAuthorize("hasAuthority('AGENT') or hasAuthority('CHEF_EQUIPE') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('AGENT') or hasRole('CHEF_EQUIPE') or hasRole('ADMIN')")
     public List<ReclamationResponse> getMyMissions(Authentication authentication) {
         return reclamationService.getMissionsAgent(authentication.getName());
     }
@@ -97,14 +97,18 @@ public class ReclamationController {
 
     @PutMapping("/{numeroReclamation}/accepter")
     @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
-    public ReclamationResponse accepterReclamation(@PathVariable String numeroReclamation) {
-        return reclamationService.accepterReclamation(numeroReclamation);
+    public ReclamationResponse accepterReclamation(
+            @PathVariable String numeroReclamation,
+            Authentication authentication) {
+        return reclamationService.accepterReclamation(numeroReclamation, authentication.getName());
     }
 
     @PutMapping("/{numeroReclamation}/resoudre")
     @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
-    public ReclamationResponse marquerResolue(@PathVariable String numeroReclamation) {
-        return reclamationService.marquerResolue(numeroReclamation);
+    public ReclamationResponse marquerResolue(
+            @PathVariable String numeroReclamation,
+            Authentication authentication) {
+        return reclamationService.marquerResolue(numeroReclamation, authentication.getName());
     }
 
     @PostMapping("/json")

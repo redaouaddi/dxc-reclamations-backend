@@ -274,21 +274,69 @@ public class ReclamationServiceImpl implements ReclamationService {
                 .toList();
     }
 
-    @Override
-    public ReclamationResponse accepterReclamation(String numeroReclamation) {
-        Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
-                .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
-        reclamation.setStatut(ReclamationStatus.EN_COURS);
-        reclamation.setDateMiseAJour(LocalDateTime.now());
-        return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
+    private void checkAgentAuthorization(Reclamation reclamation, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+        
+        boolean isAdminOrSM = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equals("ADMIN") || r.getName().equals("SERVICE_MANAGER"));
+
+        if (!isAdminOrSM) {
+            if (reclamation.getEquipeAssignee() == null || 
+                user.getEquipe() == null || 
+                !reclamation.getEquipeAssignee().getId().equals(user.getEquipe().getId())) {
+                throw new UnauthorizedException("Vous n'êtes pas autorisé à modifier cette réclamation (équipe différente).");
+            }
+        }
     }
 
     @Override
-    public ReclamationResponse marquerResolue(String numeroReclamation) {
+    public ReclamationResponse accepterReclamation(String numeroReclamation, String userEmail) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+        
+        checkAgentAuthorization(reclamation, userEmail);
+                
+        reclamation.setStatut(ReclamationStatus.EN_COURS);
+        reclamation.setDateMiseAJour(LocalDateTime.now());
+        Reclamation saved = reclamationRepository.save(reclamation);
+        
+        if (saved.getClient() != null) {
+            String clientName = (saved.getClient().getFirstName() + " " + saved.getClient().getLastName()).trim();
+            emailService.sendStatusChangeNotification(
+                    saved.getClient().getEmail(),
+                    clientName,
+                    saved.getNumeroReclamation(),
+                    saved.getStatut(),
+                    saved.getTitre()
+            );
+        }
+        
+        return reclamationMapper.toResponse(saved);
+    }
+
+    @Override
+    public ReclamationResponse marquerResolue(String numeroReclamation, String userEmail) {
+        Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
+                .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+        
+        checkAgentAuthorization(reclamation, userEmail);
+                
         reclamation.setStatut(ReclamationStatus.TRAITEE);
         reclamation.setDateMiseAJour(LocalDateTime.now());
-        return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
+        Reclamation saved = reclamationRepository.save(reclamation);
+        
+        if (saved.getClient() != null) {
+            String clientName = (saved.getClient().getFirstName() + " " + saved.getClient().getLastName()).trim();
+            emailService.sendStatusChangeNotification(
+                    saved.getClient().getEmail(),
+                    clientName,
+                    saved.getNumeroReclamation(),
+                    saved.getStatut(),
+                    saved.getTitre()
+            );
+        }
+        
+        return reclamationMapper.toResponse(saved);
     }
 }

@@ -25,8 +25,8 @@ public interface ReclamationService {
 
     List<ReclamationResponse> getReclamationsParEquipe(Long equipeId);
     List<ReclamationResponse> getMissionsAgent(String agentEmail);
-    ReclamationResponse accepterReclamation(String numeroReclamation);
-    ReclamationResponse marquerResolue(String numeroReclamation);
+    ReclamationResponse accepterReclamation(String numeroReclamation, String userEmail);
+    ReclamationResponse marquerResolue(String numeroReclamation, String userEmail);
 }
 
 

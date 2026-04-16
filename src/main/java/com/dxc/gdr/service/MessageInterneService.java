@@ -28,11 +28,11 @@ public class MessageInterneService {
         this.userRepository = userRepository;
     }
 
-    public MessageInterneResponse envoyerMessage(MessageInterneRequest request) {
+    public MessageInterneResponse envoyerMessage(MessageInterneRequest request, String userEmail) {
         Reclamation reclamation = reclamationRepository.findById(request.getReclamationId())
                 .orElseThrow(() -> new RuntimeException("Réclamation introuvable"));
 
-        User auteur = userRepository.findById(request.getAuteurId())
+        User auteur = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Auteur introuvable"));
 
         MessageInterne message = new MessageInterne();

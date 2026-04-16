@@ -74,4 +74,35 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Erreur d'envoi de notification d'assignation : " + e.getMessage());
         }
     }
+
+    @Override
+    public void sendStatusChangeNotification(String toEmail, String clientName, String numeroReclamation, com.dxc.gdr.model.ReclamationStatus newStatus, String titre) {
+        try {
+            String statusText = "";
+            if (newStatus == com.dxc.gdr.model.ReclamationStatus.EN_COURS) {
+                statusText = "En cours de traitement";
+            } else if (newStatus == com.dxc.gdr.model.ReclamationStatus.TRAITEE) {
+                statusText = "Traitée (Résolue)";
+            } else {
+                return; // Only notify for these statuses as requested
+            }
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Mise à jour du statut de votre réclamation " + numeroReclamation);
+            message.setText(
+                    "Bonjour " + clientName + ",\n\n" +
+                            "Nous vous informons que le statut de votre réclamation n° " + numeroReclamation + " (« " + titre + " ») a été mis à jour.\n\n" +
+                            "Nouveau statut : " + statusText + ".\n\n" +
+                            "Vous pouvez suivre l'état de votre demande depuis votre espace client.\n\n" +
+                            "Cordialement,\n" +
+                            "L'équipe DXC"
+            );
+            mailSender.send(message);
+            System.out.println("NOTIFICATION DE STATUT ENVOYÉE AU CLIENT : " + toEmail + " / Statut : " + statusText);
+        } catch (Exception e) {
+            System.err.println("Erreur d'envoi de notification de changement de statut : " + e.getMessage());
+        }
+    }
 }
