@@ -54,9 +54,8 @@ public class Reclamation {
     @Column(name = "attachment_name")
     private String attachmentName;
 
-    @Lob
-    @Column(name = "attachment_data")
-    private byte[] attachmentData;
+    @Column(name = "attachment_path")
+    private String attachmentPath;
 
     @Column(name = "motif_refus", length = 500)
     private String motifRefus;
@@ -181,12 +180,12 @@ public class Reclamation {
         this.attachmentName = attachmentName;
     }
 
-    public byte[] getAttachmentData() {
-        return attachmentData;
+    public String getAttachmentPath() {
+        return attachmentPath;
     }
 
-    public void setAttachmentData(byte[] attachmentData) {
-        this.attachmentData = attachmentData;
+    public void setAttachmentPath(String attachmentPath) {
+        this.attachmentPath = attachmentPath;
     }
 
     public String getSousCategorieIncident() {

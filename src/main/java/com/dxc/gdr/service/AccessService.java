@@ -102,11 +102,7 @@ public class AccessService {
     }
 
     private String normalizeAccessName(String accessName) {
-        String normalized = accessName.trim().toUpperCase();
-        if (!normalized.startsWith("ROLE_")) {
-            normalized = "ROLE_" + normalized;
-        }
-        return normalized;
+        return accessName.trim().toUpperCase();
     }
 
     private String normalizePermissionName(String permissionName) {

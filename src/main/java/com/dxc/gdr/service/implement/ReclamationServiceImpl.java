@@ -77,8 +77,28 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         if (file != null && !file.isEmpty()) {
             try {
-                reclamation.setAttachmentName(file.getOriginalFilename());
-                reclamation.setAttachmentData(file.getBytes());
+                String originalFilename = file.getOriginalFilename();
+                reclamation.setAttachmentName(originalFilename);
+
+                String baseUploadDir = System.getProperty("user.home") + java.io.File.separator + "gdr_uploads" 
+                        + java.io.File.separator + "ref Reclamation" 
+                        + java.io.File.separator + reclamation.getNumeroReclamation();
+                
+                java.io.File dir = new java.io.File(baseUploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                String extension = "";
+                if (originalFilename != null && originalFilename.lastIndexOf(".") > 0) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+                String uniqueFilename = java.util.UUID.randomUUID().toString() + extension;
+                String filePath = baseUploadDir + java.io.File.separator + uniqueFilename;
+
+                file.transferTo(new java.io.File(filePath));
+
+                reclamation.setAttachmentPath(filePath);
             } catch (java.io.IOException e) {
                 throw new BadRequestException("Erreur de sauvegarde de fichier");
             }
@@ -94,7 +114,7 @@ public class ReclamationServiceImpl implements ReclamationService {
                         client.getEmail(),
                         client.getFirstName(),
                         saved.getNumeroReclamation(),
-                        saved.getAttachmentData(),
+                        saved.getAttachmentPath(),
                         saved.getAttachmentName()
                 );
                 System.out.println("EMAIL ACCUSE ENVOYE A : " + client.getEmail());

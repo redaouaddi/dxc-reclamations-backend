@@ -26,7 +26,7 @@ public class PasskeyController {
         session.setAttribute("passkey_register_email", email);
 
         return ResponseEntity.ok(Map.of(
-                "challenge", challenge,
+
                 "rpId", "localhost",
                 "rpName", "DXC Reclamation App",
                 "userName", email

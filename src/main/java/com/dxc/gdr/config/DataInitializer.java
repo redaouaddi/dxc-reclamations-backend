@@ -35,40 +35,44 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("ℹ️ Info : Pas de contrainte à supprimer ou erreur SQL mineure : " + e.getMessage());
         }
 
+        // 1. MIGRATION : Supprimer le préfixe ROLE_ des noms de rôles existants si nécessaire
+        jdbcTemplate.execute("UPDATE accesses SET name = SUBSTRING(name, 6) WHERE name LIKE 'ROLE_%'");
+        System.out.println("🔄 Migration : Préfixes 'ROLE_' supprimés des noms de rôles existants.");
+
         // ─────────────────────────────────────────────────────────────
-        // 1. ACCÈS (RÔLES) — noms stockés avec ROLE_ (convention Spring)
+        // 2. ACCÈS (RÔLES) — libellés propres sans préfixe ROLE_
         // ─────────────────────────────────────────────────────────────
 
         // CLIENT
-        createAccessIfAbsent("ROLE_CLIENT", Set.of(
+        createAccessIfAbsent("CLIENT", Set.of(
                 LIRE_RECLAMATIONS,
                 CREER_RECLAMATIONS
         ));
 
         // AGENT
-        createAccessIfAbsent("ROLE_AGENT", Set.of(
+        createAccessIfAbsent("AGENT", Set.of(
                 LIRE_RECLAMATIONS,
                 MODIFIER_RECLAMATIONS
         ));
 
         // SERVICE_MANAGER
-        createAccessIfAbsent("ROLE_SERVICE_MANAGER", Set.of(
+        createAccessIfAbsent("SERVICE_MANAGER", Set.of(
                 LIRE_RECLAMATIONS,
                 ASSIGNER_RECLAMATIONS,
                 VOIR_NOUVELLES_RECLAMATIONS
         ));
 
         // CHEF_EQUIPE
-        createAccessIfAbsent("ROLE_CHEF_EQUIPE", Set.of(
+        createAccessIfAbsent("CHEF_EQUIPE", Set.of(
                 LIRE_RECLAMATIONS,
                 GERER_EQUIPE
         ));
 
         // ADMIN : accès total
-        createAccessIfAbsent("ROLE_ADMIN", Set.of(EPermission.values()));
+        createAccessIfAbsent("ADMIN", Set.of(EPermission.values()));
 
         // ─────────────────────────────────────────────────────────────
-        // 2. UTILISATEUR ADMIN PAR DÉFAUT
+        // 3. UTILISATEUR ADMIN PAR DÉFAUT
         // ─────────────────────────────────────────────────────────────
         if (userRepository.findByEmail("admin@dxc.com").isEmpty()) {
             User admin = new User(
@@ -78,8 +82,8 @@ public class DataInitializer implements CommandLineRunner {
                     encoder.encode("admin123"),
                     Gender.MASCULIN
             );
-            Access adminRole = accessRepository.findByName("ROLE_ADMIN")
-                    .orElseThrow(() -> new RuntimeException("ROLE_ADMIN introuvable."));
+            Access adminRole = accessRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("ADMIN introuvable."));
             Set<Access> roles = new HashSet<>();
             roles.add(adminRole);
             admin.setRoles(roles);
