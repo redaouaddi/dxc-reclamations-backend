@@ -259,6 +259,22 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ReclamationResponse> getMissionsAgent(String agentEmail) {
+        User agent = userRepository.findByEmail(agentEmail)
+                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+
+        if (agent.getEquipe() == null) {
+            return List.of();
+        }
+
+        return reclamationRepository.findAllByTeamId(agent.getEquipe().getId())
+                .stream()
+                .map(reclamationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
     public ReclamationResponse accepterReclamation(String numeroReclamation) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));

@@ -1,11 +1,10 @@
 package com.dxc.gdr.config;
 
 import com.dxc.gdr.dao.AccessRepository;
+import com.dxc.gdr.dao.EquipeRepository;
+import com.dxc.gdr.dao.ReclamationRepository;
 import com.dxc.gdr.dao.UserRepository;
-import com.dxc.gdr.model.Access;
-import com.dxc.gdr.model.EPermission;
-import com.dxc.gdr.model.Gender;
-import com.dxc.gdr.model.User;
+import com.dxc.gdr.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,6 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private PasswordEncoder encoder;
     @Autowired private AccessRepository accessRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private EquipeRepository equipeRepository;
+    @Autowired private ReclamationRepository reclamationRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @Override
@@ -89,6 +90,54 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRoles(roles);
             userRepository.save(admin);
             System.out.println("✅ Admin créé : admin@dxc.com / admin123");
+        }
+
+        // 4. TEST DATA FOR AGENT STORY
+        Equipe team = equipeRepository.findByNom("Team Support")
+                .orElseGet(() -> {
+                    Equipe t = new Equipe();
+                    t.setNom("Team Support");
+                    return equipeRepository.save(t);
+                });
+
+        User agent = userRepository.findByEmail("agent@dxc.com")
+                .orElseGet(() -> {
+                    User u = new User(
+                            "Agent",
+                            "DXC",
+                            "agent@dxc.com",
+                            encoder.encode("agent123"),
+                            Gender.FEMININ
+                    );
+                    Access agentRole = accessRepository.findByName("AGENT")
+                            .orElseThrow(() -> new RuntimeException("AGENT introuvable."));
+                    u.getRoles().add(agentRole);
+                    return u;
+                });
+        
+        // Ensure team is set
+        agent.setEquipe(team);
+        userRepository.save(agent);
+        System.out.println("✅ Agent vérifié/créé : agent@dxc.com (Team: Team Support)");
+
+        // Create a Reclamation for this team if it doesn't exist
+        if (reclamationRepository.findByNumeroReclamation("REC-TEST-001").isEmpty()) {
+            User admin = userRepository.findByEmail("admin@dxc.com")
+                    .orElseThrow(() -> new RuntimeException("Admin de test manquant"));
+
+            Reclamation rec = new Reclamation();
+            rec.setNumeroReclamation("REC-TEST-001");
+            rec.setTitre("Problème VPN");
+            rec.setDescription("Le VPN ne se connecte plus depuis ce matin.");
+            rec.setStatut(ReclamationStatus.EN_ATTENTE);
+            rec.setPriorite(ReclamationPriority.ELEVEE);
+            rec.setCategorie(ReclamationCategory.MAINTENANCE);
+            rec.setEquipeAssignee(team);
+            rec.setClient(admin); // Fix: assign a client
+            rec.setDateCreation(java.time.LocalDateTime.now());
+            rec.setDateMiseAJour(java.time.LocalDateTime.now());
+            reclamationRepository.save(rec);
+            System.out.println("✅ Réclamation de test REC-TEST-001 créée et assignée à Team Support.");
         }
     }
 

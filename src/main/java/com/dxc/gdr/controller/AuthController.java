@@ -45,7 +45,6 @@ public class AuthController {
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
-                .filter(auth -> auth.startsWith("ROLE_")) // Only show Roles in the response
                 .collect(Collectors.toList());
 
         JwtResponse response = new JwtResponse(

@@ -24,6 +24,7 @@ public interface ReclamationService {
     ReclamationResponse rejeterReclamation(String numeroReclamation, String motif, String chefEmail);
 
     List<ReclamationResponse> getReclamationsParEquipe(Long equipeId);
+    List<ReclamationResponse> getMissionsAgent(String agentEmail);
     ReclamationResponse accepterReclamation(String numeroReclamation);
     ReclamationResponse marquerResolue(String numeroReclamation);
 }

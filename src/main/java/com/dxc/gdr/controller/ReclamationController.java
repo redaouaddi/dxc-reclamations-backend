@@ -41,6 +41,12 @@ public class ReclamationController {
         return reclamationService.getMyReclamations(authentication.getName());
     }
 
+    @GetMapping("/mes-missions")
+    @PreAuthorize("hasAuthority('AGENT') or hasAuthority('CHEF_EQUIPE') or hasRole('ADMIN')")
+    public List<ReclamationResponse> getMyMissions(Authentication authentication) {
+        return reclamationService.getMissionsAgent(authentication.getName());
+    }
+
     @GetMapping("/{numeroReclamation}/statut")
     @PreAuthorize("hasRole('CLIENT')")
     public ReclamationStatusResponse getReclamationStatus(@PathVariable String numeroReclamation,
