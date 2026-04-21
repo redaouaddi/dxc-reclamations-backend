@@ -18,26 +18,28 @@ public class ReclamationMapper {
         response.setNumeroReclamation(reclamation.getNumeroReclamation());
         response.setTitre(reclamation.getTitre());
         response.setDescription(reclamation.getDescription());
-        
+
         response.setCategorie(reclamation.getCategorie() != null ? reclamation.getCategorie().name() : "NON_SPECIFIE");
         response.setPriorite(reclamation.getPriorite() != null ? reclamation.getPriorite().name() : "MOYENNE");
         response.setStatut(determineStatut(reclamation));
         response.setMotifRefus(reclamation.getMotifRefus());
 
-        if(reclamation.getEquipeAssignee() != null){
-
+        if (reclamation.getEquipeAssignee() != null) {
             response.setEquipeAssignee(reclamation.getEquipeAssignee().getNom());
         }
-        
-        if(reclamation.getClient() != null){
+
+        if (reclamation.getClient() != null) {
             String nomComplet = (reclamation.getClient().getFirstName() != null ? reclamation.getClient().getFirstName() : "")
                     + " " + (reclamation.getClient().getLastName() != null ? reclamation.getClient().getLastName() : "");
             response.setClientNom(nomComplet.trim());
         }
-        
+
         response.setDateCreation(reclamation.getDateCreation());
         response.setDateMiseAJour(reclamation.getDateMiseAJour());
 
+        response.setSlaDeadline(reclamation.getSlaDeadline());
+        response.setSlaStatus(reclamation.getSlaStatus() != null ? reclamation.getSlaStatus().name() : null);
+        response.setDateResolution(reclamation.getDateResolution());
 
         return response;
     }
@@ -49,6 +51,9 @@ public class ReclamationMapper {
         response.setNumeroReclamation(reclamation.getNumeroReclamation());
         response.setStatut(determineStatut(reclamation));
         response.setDateMiseAJour(reclamation.getDateMiseAJour());
+        response.setSlaDeadline(reclamation.getSlaDeadline());
+        response.setSlaStatus(reclamation.getSlaStatus() != null ? reclamation.getSlaStatus().name() : null);
+        response.setDateResolution(reclamation.getDateResolution());
 
         return response;
     }
@@ -71,4 +76,4 @@ public class ReclamationMapper {
 
         return actualStatut;
     }
-}
+}

@@ -16,6 +16,9 @@ public class ReclamationResponse {
     private String equipeAssignee;
     private String clientNom;
     private String motifRefus;
+    private LocalDateTime slaDeadline;
+    private String slaStatus;
+    private LocalDateTime dateResolution;
 
     public ReclamationResponse() {
     }
@@ -36,13 +39,14 @@ public class ReclamationResponse {
         this.motifRefus = motifRefus;
     }
 
-
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getNumeroReclamation() {
         return numeroReclamation;
     }
@@ -130,4 +134,28 @@ public class ReclamationResponse {
     public void setMotifRefus(String motifRefus) {
         this.motifRefus = motifRefus;
     }
-}
+
+    public LocalDateTime getSlaDeadline() {
+        return slaDeadline;
+    }
+
+    public void setSlaDeadline(LocalDateTime slaDeadline) {
+        this.slaDeadline = slaDeadline;
+    }
+
+    public String getSlaStatus() {
+        return slaStatus;
+    }
+
+    public void setSlaStatus(String slaStatus) {
+        this.slaStatus = slaStatus;
+    }
+
+    public LocalDateTime getDateResolution() {
+        return dateResolution;
+    }
+
+    public void setDateResolution(LocalDateTime dateResolution) {
+        this.dateResolution = dateResolution;
+    }
+}

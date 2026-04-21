@@ -64,6 +64,17 @@ public class Reclamation {
     @JoinColumn(name = "equipe_assignee_id")
     private Equipe equipeAssignee;
 
+    // ===== AJOUT SLA =====
+
+    @Column(name = "sla_deadline")
+    private LocalDateTime slaDeadline;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sla_status")
+    private SlaStatus slaStatus;
+
+    @Column(name = "date_resolution")
+    private LocalDateTime dateResolution;
 
     // ===== CONSTRUCTEURS =====
 
@@ -219,5 +230,28 @@ public class Reclamation {
     public void setMotifRefus(String motifRefus) {
         this.motifRefus = motifRefus;
     }
+
+    public LocalDateTime getSlaDeadline() {
+        return slaDeadline;
+    }
+
+    public void setSlaDeadline(LocalDateTime slaDeadline) {
+        this.slaDeadline = slaDeadline;
+    }
+
+    public SlaStatus getSlaStatus() {
+        return slaStatus;
+    }
+
+    public void setSlaStatus(SlaStatus slaStatus) {
+        this.slaStatus = slaStatus;
+    }
+
+    public LocalDateTime getDateResolution() {
+        return dateResolution;
+    }
+
+    public void setDateResolution(LocalDateTime dateResolution) {
+        this.dateResolution = dateResolution;
+    }
 }
-
