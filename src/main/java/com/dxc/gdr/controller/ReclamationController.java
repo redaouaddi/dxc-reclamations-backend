@@ -120,5 +120,3 @@ public class ReclamationController {
         return reclamationService.createReclamation(request, null, authentication.getName());
     }
 }
-
-

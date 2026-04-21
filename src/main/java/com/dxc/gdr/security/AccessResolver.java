@@ -1,12 +1,13 @@
 package com.dxc.gdr.security;
 
-import com.dxc.gdr.common.exception.BadRequestException;
+import com.dxc.gdr.common.exception.NotFoundException;
 import com.dxc.gdr.dao.AccessRepository;
 import com.dxc.gdr.model.Access;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class AccessResolver {
@@ -17,26 +18,15 @@ public class AccessResolver {
         this.accessRepository = accessRepository;
     }
 
-    public Set<Access> resolveAccesses(Set<String> accessNames) {
-        Set<Access> accesses = new HashSet<>();
-
-        for (String r : accessNames) {
-            String normalized = normalizeAccessName(r);
-
-            Access accessEntity = accessRepository.findByNameAndDeletedFalse(normalized)
-                    .orElseThrow(() -> new BadRequestException("Access introuvable : " + r));
-
-            accesses.add(accessEntity);
+    public Set<Access> resolveAccesses(Collection<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            throw new NotFoundException("Aucun rôle fourni.");
         }
 
-        return accesses;
-    }
-
-    private String normalizeAccessName(String accessName) {
-        String normalized = accessName.trim().toUpperCase();
-        if (!normalized.startsWith("ROLE_")) {
-            normalized = "ROLE_" + normalized;
-        }
-        return normalized;
+        return roleNames.stream()
+                .map(role -> role == null ? null : role.trim().toUpperCase())
+                .map(roleName -> accessRepository.findByNameAndDeletedFalse(roleName)
+                        .orElseThrow(() -> new NotFoundException("Access introuvable : " + roleName)))
+                .collect(Collectors.toSet());
     }
 }

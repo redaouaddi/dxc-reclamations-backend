@@ -6,9 +6,11 @@ import com.dxc.gdr.model.EPermission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 @Mapper(componentModel = "spring")
 public interface AccessMapper {

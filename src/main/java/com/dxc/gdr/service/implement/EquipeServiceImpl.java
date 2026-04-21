@@ -150,10 +150,10 @@ public class EquipeServiceImpl implements EquipeService {
     @Override
     @Transactional(readOnly = true)
     public List<EquipeResponse.AgentResponse> listerAgentsLibres() {
-        return userRepository.findByRoleAndEquipeIsNull("ROLE_AGENT")
+        return userRepository.findByRoleAndEquipeIsNull("AGENT")
                 .stream()
                 .map(this::toAgentResponse)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────

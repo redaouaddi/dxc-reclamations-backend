@@ -16,6 +16,7 @@ import com.dxc.gdr.model.ReclamationCategory;
 import com.dxc.gdr.model.ReclamationPriority;
 import com.dxc.gdr.model.ReclamationStatus;
 import com.dxc.gdr.model.User;
+import com.dxc.gdr.service.SlaCalculationService;
 import com.dxc.gdr.service.interfaces.EmailService;
 import com.dxc.gdr.service.interfaces.ReclamationService;
 import org.springframework.stereotype.Service;
@@ -34,17 +35,20 @@ public class ReclamationServiceImpl implements ReclamationService {
     private final ReclamationMapper reclamationMapper;
     private final EmailService emailService;
     private final EquipeRepository equipeRepository;
+    private final SlaCalculationService slaCalculationService;
 
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   UserRepository userRepository,
                                   ReclamationMapper reclamationMapper,
                                   EmailService emailService,
-                                  EquipeRepository equipeRepository) {
+                                  EquipeRepository equipeRepository,
+                                  SlaCalculationService slaCalculationService) {
         this.reclamationRepository = reclamationRepository;
         this.userRepository = userRepository;
         this.reclamationMapper = reclamationMapper;
         this.emailService = emailService;
         this.equipeRepository = equipeRepository;
+        this.slaCalculationService = slaCalculationService;
     }
 
     @Override
@@ -80,10 +84,11 @@ public class ReclamationServiceImpl implements ReclamationService {
                 String originalFilename = file.getOriginalFilename();
                 reclamation.setAttachmentName(originalFilename);
 
-                String baseUploadDir = System.getProperty("user.home") + java.io.File.separator + "gdr_uploads" 
-                        + java.io.File.separator + "ref Reclamation" 
+                String baseUploadDir = System.getProperty("user.home")
+                        + java.io.File.separator + "gdr_uploads"
+                        + java.io.File.separator + "ref Reclamation"
                         + java.io.File.separator + reclamation.getNumeroReclamation();
-                
+
                 java.io.File dir = new java.io.File(baseUploadDir);
                 if (!dir.exists()) {
                     dir.mkdirs();
@@ -93,7 +98,8 @@ public class ReclamationServiceImpl implements ReclamationService {
                 if (originalFilename != null && originalFilename.lastIndexOf(".") > 0) {
                     extension = originalFilename.substring(originalFilename.lastIndexOf("."));
                 }
-                String uniqueFilename = java.util.UUID.randomUUID().toString() + extension;
+
+                String uniqueFilename = java.util.UUID.randomUUID() + extension;
                 String filePath = baseUploadDir + java.io.File.separator + uniqueFilename;
 
                 file.transferTo(new java.io.File(filePath));
@@ -104,11 +110,12 @@ public class ReclamationServiceImpl implements ReclamationService {
             }
         }
 
+        slaCalculationService.initialiserSla(reclamation);
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
         Reclamation saved = reclamationRepository.save(reclamation);
 
         try {
-            System.out.println("Email client = " + client.getEmail());
-
             if (client.getEmail() != null && !client.getEmail().isBlank()) {
                 emailService.sendReclamationAcknowledgment(
                         client.getEmail(),
@@ -117,11 +124,7 @@ public class ReclamationServiceImpl implements ReclamationService {
                         saved.getAttachmentPath(),
                         saved.getAttachmentName()
                 );
-                System.out.println("EMAIL ACCUSE ENVOYE A : " + client.getEmail());
-            } else {
-                System.err.println("ERREUR ENVOI EMAIL : email client vide ou null");
             }
-
         } catch (Exception e) {
             System.err.println("ERREUR ENVOI EMAIL : " + e.getMessage());
             e.printStackTrace();
@@ -135,8 +138,10 @@ public class ReclamationServiceImpl implements ReclamationService {
     public List<ReclamationResponse> getMyReclamations(String userEmail) {
         User client = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+
         return reclamationRepository.findByClientIdOrderByDateCreationDesc(client.getId())
                 .stream()
+                .peek(slaCalculationService::recalculerSlaStatus)
                 .map(reclamationMapper::toResponse)
                 .toList();
     }
@@ -146,9 +151,12 @@ public class ReclamationServiceImpl implements ReclamationService {
     public ReclamationStatusResponse getReclamationStatus(String numeroReclamation, String userEmail) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
         if (!reclamation.getClient().getEmail().equals(userEmail)) {
             throw new UnauthorizedException("Vous n'êtes pas autorisé à consulter cette réclamation");
         }
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
         return reclamationMapper.toStatusResponse(reclamation);
     }
 
@@ -160,8 +168,10 @@ public class ReclamationServiceImpl implements ReclamationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReclamationResponse> getNouvellesReclamations() {
-        return reclamationRepository.findByStatutInOrderByDateCreationDesc(List.of(ReclamationStatus.EN_ATTENTE, ReclamationStatus.REJETEE))
+        return reclamationRepository.findByStatutInOrderByDateCreationDesc(
+                        List.of(ReclamationStatus.EN_ATTENTE, ReclamationStatus.REJETEE))
                 .stream()
+                .peek(slaCalculationService::recalculerSlaStatus)
                 .map(reclamationMapper::toResponse)
                 .toList();
     }
@@ -171,6 +181,8 @@ public class ReclamationServiceImpl implements ReclamationService {
     public ReclamationResponse getReclamationDetails(String numeroReclamation) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
         return reclamationMapper.toResponse(reclamation);
     }
 
@@ -186,7 +198,10 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setStatut(ReclamationStatus.EN_ATTENTE);
 
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
         Reclamation saved = reclamationRepository.save(reclamation);
+
         if (equipe.getChefEquipe() != null) {
             emailService.sendAssignmentNotification(
                     equipe.getChefEquipe().getEmail(),
@@ -195,6 +210,7 @@ public class ReclamationServiceImpl implements ReclamationService {
                     saved.getTitre()
             );
         }
+
         return reclamationMapper.toResponse(saved);
     }
 
@@ -227,25 +243,37 @@ public class ReclamationServiceImpl implements ReclamationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReclamationResponse> getAllReclamations() {
-        return reclamationRepository.findAll().stream().map(reclamationMapper::toResponse).toList();
+        return reclamationRepository.findAll()
+                .stream()
+                .peek(slaCalculationService::recalculerSlaStatus)
+                .map(reclamationMapper::toResponse)
+                .toList();
     }
 
     @Override
     public ReclamationResponse rejeterReclamation(String numeroReclamation, String motif, String chefEmail) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
         if (reclamation.getEquipeAssignee() == null) {
             throw new BadRequestException("Cette réclamation n'est assignée à aucune équipe");
         }
+
         User chef = userRepository.findByEmail(chefEmail)
                 .orElseThrow(() -> new NotFoundException("Chef d'équipe introuvable"));
+
         if (!reclamation.getEquipeAssignee().getChefEquipe().getId().equals(chef.getId())) {
             throw new UnauthorizedException("Seul le chef de l'équipe assignée peut rejeter cette réclamation");
         }
+
         reclamation.setStatut(ReclamationStatus.REJETEE);
         reclamation.setMotifRefus(motif);
         reclamation.setEquipeAssignee(null);
         reclamation.setDateMiseAJour(LocalDateTime.now());
+        reclamation.setDateResolution(LocalDateTime.now());
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
         return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
     }
 
@@ -254,6 +282,7 @@ public class ReclamationServiceImpl implements ReclamationService {
     public List<ReclamationResponse> getReclamationsParEquipe(Long equipeId) {
         return reclamationRepository.findAllByTeamId(equipeId)
                 .stream()
+                .peek(slaCalculationService::recalculerSlaStatus)
                 .map(reclamationMapper::toResponse)
                 .toList();
     }
@@ -261,34 +290,87 @@ public class ReclamationServiceImpl implements ReclamationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReclamationResponse> getMissionsAgent(String agentEmail) {
-        User agent = userRepository.findByEmail(agentEmail)
-                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+        User user = userRepository.findByEmail(agentEmail)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
-        if (agent.getEquipe() == null) {
+        Equipe equipe = equipeRepository.findByChefEquipeId(user.getId()).orElse(null);
+
+        if (equipe == null) {
+            equipe = user.getEquipe();
+        }
+
+        if (equipe == null) {
             return List.of();
         }
 
-        return reclamationRepository.findAllByTeamId(agent.getEquipe().getId())
+        return reclamationRepository.findAllByTeamId(equipe.getId())
                 .stream()
+                .peek(slaCalculationService::recalculerSlaStatus)
                 .map(reclamationMapper::toResponse)
                 .toList();
     }
 
     @Override
-    public ReclamationResponse accepterReclamation(String numeroReclamation) {
+    public ReclamationResponse accepterReclamation(String numeroReclamation, String userEmail) {
+
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+
+        Equipe equipe = equipeRepository.findByChefEquipeId(user.getId()).orElse(null);
+
+        if (equipe == null) {
+            equipe = user.getEquipe();
+        }
+
+        if (equipe == null) {
+            throw new UnauthorizedException("Utilisateur sans équipe");
+        }
+
+        if (reclamation.getEquipeAssignee() == null) {
+            throw new BadRequestException("Réclamation non assignée");
+        }
+
+        if (!reclamation.getEquipeAssignee().getId().equals(equipe.getId())) {
+            throw new UnauthorizedException("Réclamation non liée à votre équipe");
+        }
+
         reclamation.setStatut(ReclamationStatus.EN_COURS);
         reclamation.setDateMiseAJour(LocalDateTime.now());
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
         return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
     }
 
     @Override
-    public ReclamationResponse marquerResolue(String numeroReclamation) {
+    public ReclamationResponse marquerResolue(String numeroReclamation, String userEmail) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        User agent = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+
+        if (agent.getEquipe() == null) {
+            throw new UnauthorizedException("L'agent n'appartient à aucune équipe");
+        }
+
+        if (reclamation.getEquipeAssignee() == null) {
+            throw new BadRequestException("Cette réclamation n'est assignée à aucune équipe");
+        }
+
+        if (!reclamation.getEquipeAssignee().getId().equals(agent.getEquipe().getId())) {
+            throw new UnauthorizedException("Cette réclamation n'est pas assignée à l'équipe de l'agent");
+        }
+
         reclamation.setStatut(ReclamationStatus.TRAITEE);
         reclamation.setDateMiseAJour(LocalDateTime.now());
+        reclamation.setDateResolution(LocalDateTime.now());
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
         return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
     }
 }
