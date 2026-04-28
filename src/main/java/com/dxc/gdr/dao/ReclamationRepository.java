@@ -1,6 +1,8 @@
 package com.dxc.gdr.dao;
 
 import com.dxc.gdr.model.Reclamation;
+import com.dxc.gdr.model.ReclamationStatus;
+import com.dxc.gdr.model.SlaStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,6 +12,10 @@ import java.util.Optional;
 public interface ReclamationRepository extends JpaRepository<Reclamation, Long> {
 
     Optional<Reclamation> findByNumeroReclamation(String numeroReclamation);
+
+    long countByStatut(ReclamationStatus statut);
+
+    long countBySlaStatus(SlaStatus slaStatus);
 
     List<Reclamation> findByClientIdOrderByDateCreationDesc(Long clientId);
 

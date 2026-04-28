@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.dxc.gdr.Dto.DashboardStatsDto;
 import java.util.List;
 
 @RestController
@@ -35,5 +35,10 @@ public class DashboardController {
     @GetMapping("/reclamations-categorie")
     public List<ChartDataDto> getCategorieChart(){
         return dashboardService.getReclamationsByCategorie();
+    }
+
+    @GetMapping("/stats")
+    public DashboardStatsDto getDashboardStats() {
+        return dashboardService.getDashboardStats();
     }
 }
