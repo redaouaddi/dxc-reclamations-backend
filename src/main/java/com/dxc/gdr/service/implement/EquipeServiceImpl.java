@@ -35,13 +35,27 @@ public class EquipeServiceImpl implements EquipeService {
         User chef = userRepository.findByEmail(request.getChefEmail())
                 .orElseThrow(() -> new NotFoundException("Utilisateur avec l'email [" + request.getChefEmail() + "] introuvable"));
 
-        // Un utilisateur ne peut être chef que d'une seule équipe
         equipeRepository.findByChefEquipeId(chef.getId()).ifPresent(e -> {
             throw new BadRequestException("Cet utilisateur est déjà chef de l'équipe : " + e.getNom());
         });
 
         Equipe equipe = new Equipe(request.getNom().trim(), chef);
-        return toResponse(equipeRepository.save(equipe));
+        equipe = equipeRepository.save(equipe);
+
+        if (request.getAgentIds() != null && !request.getAgentIds().isEmpty()) {
+            List<User> agentsToAssign = userRepository.findAllById(request.getAgentIds());
+            for (User agent : agentsToAssign) {
+                if (agent.getEquipe() == null) {
+                    agent.setEquipe(equipe);
+                    if (!equipe.getAgents().contains(agent)) {
+                        equipe.getAgents().add(agent);
+                    }
+                    userRepository.save(agent);
+                }
+            }
+        }
+
+        return toResponse(equipe);
     }
 
     // ─── ADMIN : Lister toutes les équipes ────────────────────────────────────
@@ -55,7 +69,7 @@ public class EquipeServiceImpl implements EquipeService {
                 .collect(Collectors.toList());
     }
 
-    // ─── ADMIN : Modifier une équipe ──────────────────────────────────────────
+    // ─── ADMIN : Modifier le nom et le chef d'une équipe ─────────────────────
 
     @Override
     public EquipeResponse modifierEquipeAdmin(Long id, com.dxc.gdr.Dto.request.UpdateEquipeAdminRequest request) {
@@ -65,7 +79,6 @@ public class EquipeServiceImpl implements EquipeService {
         User nouveauChef = userRepository.findByEmail(request.getChefEmail())
                 .orElseThrow(() -> new NotFoundException("Utilisateur avec l'email [" + request.getChefEmail() + "] introuvable"));
 
-        // Un utilisateur ne peut être chef que d'une seule équipe
         if (equipe.getChefEquipe() == null || !nouveauChef.getId().equals(equipe.getChefEquipe().getId())) {
             equipeRepository.findByChefEquipeId(nouveauChef.getId()).ifPresent(e -> {
                 throw new BadRequestException("Cet utilisateur est déjà chef de l'équipe : " + e.getNom());
@@ -74,10 +87,52 @@ public class EquipeServiceImpl implements EquipeService {
         }
 
         equipe.setNom(request.getNom().trim());
-
         return toResponse(equipeRepository.save(equipe));
     }
 
+    // ─── ADMIN : Ajouter un agent à une équipe ────────────────────────────────
+
+    @Override
+    public EquipeResponse ajouterAgent(Long equipeId, Long agentId) {
+        Equipe equipe = equipeRepository.findById(equipeId)
+                .orElseThrow(() -> new NotFoundException("Equipe introuvable"));
+
+        User agent = userRepository.findByIdAndDeletedFalse(agentId)
+                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
+
+        if (agent.getEquipe() != null && !agent.getEquipe().getId().equals(equipeId)) {
+            throw new BadRequestException("Cet agent appartient déjà à l'équipe : " + agent.getEquipe().getNom());
+        }
+
+        agent.setEquipe(equipe);
+        if (!equipe.getAgents().contains(agent)) {
+            equipe.getAgents().add(agent);
+        }
+
+        userRepository.saveAndFlush(agent);
+        return toResponse(equipe);
+    }
+
+    // ─── ADMIN : Retirer un agent d'une équipe ────────────────────────────────
+
+    @Override
+    public EquipeResponse retirerAgent(Long equipeId, Long agentId) {
+        Equipe equipe = equipeRepository.findById(equipeId)
+                .orElseThrow(() -> new NotFoundException("Equipe introuvable"));
+
+        User agent = userRepository.findByIdAndDeletedFalse(agentId)
+                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
+
+        if (agent.getEquipe() == null || !agent.getEquipe().getId().equals(equipeId)) {
+            throw new BadRequestException("Cet agent n'appartient pas à cette équipe");
+        }
+
+        agent.setEquipe(null);
+        equipe.getAgents().removeIf(a -> a.getId().equals(agentId));
+
+        userRepository.saveAndFlush(agent);
+        return toResponse(equipe);
+    }
 
     // ─── CHEF_EQUIPE : Récupérer son équipe ───────────────────────────────────
 
@@ -87,10 +142,8 @@ public class EquipeServiceImpl implements EquipeService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
-        // First check if the user is a Chef
         Equipe equipe = equipeRepository.findByChefEquipeId(user.getId()).orElse(null);
-        
-        // If not a chef, check if they are a member (Agent)
+
         if (equipe == null) {
             equipe = user.getEquipe();
         }
@@ -109,40 +162,6 @@ public class EquipeServiceImpl implements EquipeService {
         Equipe equipe = getEquipeByChefEmail(chefEmail);
         equipe.setNom(request.getNom().trim());
         return toResponse(equipeRepository.save(equipe));
-    }
-
-    // ─── CHEF_EQUIPE : Ajouter un agent libre ─────────────────────────────────
-
-    @Override
-    public EquipeResponse ajouterAgent(String chefEmail, Long agentId) {
-        Equipe equipe = getEquipeByChefEmail(chefEmail);
-        User agent = userRepository.findByIdAndDeletedFalse(agentId)
-                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
-
-        // Synchronisation manuelle des deux côtés pour mise à jour immédiate du DTO
-        agent.setEquipe(equipe);
-        if (!equipe.getAgents().contains(agent)) {
-            equipe.getAgents().add(agent);
-        }
-        
-        userRepository.saveAndFlush(agent);
-
-        return toResponse(equipe);
-    }
-
-    @Override
-    public EquipeResponse retirerAgent(String chefEmail, Long agentId) {
-        Equipe equipe = getEquipeByChefEmail(chefEmail);
-        User agent = userRepository.findByIdAndDeletedFalse(agentId)
-                .orElseThrow(() -> new NotFoundException("Agent " + agentId + " introuvable"));
-
-        // Libération de l'agent et nettoyage de la liste équipe en mémoire
-        agent.setEquipe(null);
-        equipe.getAgents().removeIf(a -> a.getId().equals(agentId));
-        
-        userRepository.saveAndFlush(agent);
-
-        return toResponse(equipe);
     }
 
     // ─── Agents libres (sans équipe) ──────────────────────────────────────────
@@ -175,6 +194,7 @@ public class EquipeServiceImpl implements EquipeService {
             User chef = equipe.getChefEquipe();
             response.setChefEquipeId(chef.getId());
             response.setChefEquipeNom(chef.getFirstName() + " " + chef.getLastName());
+            response.setChefEquipeEmail(chef.getEmail());
         }
 
         List<EquipeResponse.AgentResponse> agents = equipe.getAgents()

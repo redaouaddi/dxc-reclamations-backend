@@ -8,15 +8,20 @@ import java.util.List;
 
 public interface EquipeService {
 
-    /** ADMIN uniquement : crée une équipe et lui associe un chef */
+    /** ADMIN : crée une équipe et lui associe un chef */
     EquipeResponse creerEquipe(CreateEquipeRequest request);
 
     /** ADMIN : liste toutes les équipes */
     List<EquipeResponse> listerEquipes();
 
-    /** ADMIN : modifie une équipe (nom et chef) */
+    /** ADMIN : modifie le nom et le chef d'une équipe */
     EquipeResponse modifierEquipeAdmin(Long id, com.dxc.gdr.Dto.request.UpdateEquipeAdminRequest request);
 
+    /** ADMIN : ajoute un agent libre à une équipe */
+    EquipeResponse ajouterAgent(Long equipeId, Long agentId);
+
+    /** ADMIN : retire un agent d'une équipe */
+    EquipeResponse retirerAgent(Long equipeId, Long agentId);
 
     /** CHEF_EQUIPE : renvoie l'équipe du chef connecté */
     EquipeResponse getMonEquipe(String chefEmail);
@@ -24,12 +29,6 @@ public interface EquipeService {
     /** CHEF_EQUIPE : modifie le nom/service de son équipe */
     EquipeResponse mettreAJourNom(String chefEmail, UpdateEquipeRequest request);
 
-    /** CHEF_EQUIPE : ajoute un agent libre à son équipe */
-    EquipeResponse ajouterAgent(String chefEmail, Long agentId);
-
-    /** CHEF_EQUIPE : retire un agent de son équipe */
-    EquipeResponse retirerAgent(String chefEmail, Long agentId);
-
-    /** SERVICE_MANAGER / utilitaire : liste les users sans équipe (pour choisir dans UI) */
+    /** Utilitaire : liste les agents sans équipe */
     List<EquipeResponse.AgentResponse> listerAgentsLibres();
 }

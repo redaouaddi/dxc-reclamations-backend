@@ -7,6 +7,7 @@ public class EquipeResponse {
     private Long id;
     private String nom;
     private String chefEquipeNom;
+    private String chefEquipeEmail;
     private Long chefEquipeId;
     private int nombreAgents;
     private List<AgentResponse> agents;
@@ -47,6 +48,9 @@ public class EquipeResponse {
 
     public String getChefEquipeNom() { return chefEquipeNom; }
     public void setChefEquipeNom(String chefEquipeNom) { this.chefEquipeNom = chefEquipeNom; }
+
+    public String getChefEquipeEmail() { return chefEquipeEmail; }
+    public void setChefEquipeEmail(String chefEquipeEmail) { this.chefEquipeEmail = chefEquipeEmail; }
 
     public Long getChefEquipeId() { return chefEquipeId; }
     public void setChefEquipeId(Long chefEquipeId) { this.chefEquipeId = chefEquipeId; }

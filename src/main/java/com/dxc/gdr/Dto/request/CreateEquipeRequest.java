@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public class CreateEquipeRequest {
 
     @NotBlank(message = "Le nom de l'équipe est obligatoire")
@@ -12,6 +14,8 @@ public class CreateEquipeRequest {
 
     @NotBlank(message = "L'email du chef d'équipe est obligatoire")
     private String chefEmail;
+
+    private List<Long> agentIds;
 
     public String getNom() {
         return nom;
@@ -27,6 +31,14 @@ public class CreateEquipeRequest {
 
     public void setChefEmail(String chefEmail) {
         this.chefEmail = chefEmail;
+    }
+
+    public List<Long> getAgentIds() {
+        return agentIds;
+    }
+
+    public void setAgentIds(List<Long> agentIds) {
+        this.agentIds = agentIds;
     }
 }
 
