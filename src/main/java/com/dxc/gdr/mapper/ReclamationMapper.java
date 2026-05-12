@@ -14,6 +14,12 @@ public class ReclamationMapper {
 
         ReclamationResponse response = new ReclamationResponse();
 
+        response.setAgentNom(
+                reclamation.getAgentAssigne() != null
+                        ? reclamation.getAgentAssigne().getEmail()
+                        : null
+        );
+
         response.setId(reclamation.getId());
         response.setNumeroReclamation(reclamation.getNumeroReclamation());
         response.setTitre(reclamation.getTitre());

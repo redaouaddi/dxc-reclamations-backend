@@ -19,6 +19,7 @@ public class ReclamationResponse {
     private LocalDateTime slaDeadline;
     private String slaStatus;
     private LocalDateTime dateResolution;
+    private String agentNom;
 
     public ReclamationResponse() {
     }
@@ -157,5 +158,13 @@ public class ReclamationResponse {
 
     public void setDateResolution(LocalDateTime dateResolution) {
         this.dateResolution = dateResolution;
+    }
+
+    public String getAgentNom() {
+        return agentNom;
+    }
+
+    public void setAgentNom(String agentNom) {
+        this.agentNom = agentNom;
     }
 }

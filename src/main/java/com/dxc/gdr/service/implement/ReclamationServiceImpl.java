@@ -10,12 +10,7 @@ import com.dxc.gdr.dao.EquipeRepository;
 import com.dxc.gdr.dao.ReclamationRepository;
 import com.dxc.gdr.dao.UserRepository;
 import com.dxc.gdr.mapper.ReclamationMapper;
-import com.dxc.gdr.model.Equipe;
-import com.dxc.gdr.model.Reclamation;
-import com.dxc.gdr.model.ReclamationCategory;
-import com.dxc.gdr.model.ReclamationPriority;
-import com.dxc.gdr.model.ReclamationStatus;
-import com.dxc.gdr.model.User;
+import com.dxc.gdr.model.*;
 import com.dxc.gdr.service.SlaCalculationService;
 import com.dxc.gdr.service.interfaces.EmailService;
 import com.dxc.gdr.service.interfaces.ReclamationService;
@@ -103,8 +98,8 @@ public class ReclamationServiceImpl implements ReclamationService {
                 String filePath = baseUploadDir + java.io.File.separator + uniqueFilename;
 
                 file.transferTo(new java.io.File(filePath));
-
                 reclamation.setAttachmentPath(filePath);
+
             } catch (java.io.IOException e) {
                 throw new BadRequestException("Erreur de sauvegarde de fichier");
             }
@@ -190,10 +185,12 @@ public class ReclamationServiceImpl implements ReclamationService {
     public ReclamationResponse assignerEquipe(String numeroReclamation, Long idEquipe) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
         Equipe equipe = equipeRepository.findById(idEquipe)
                 .orElseThrow(() -> new NotFoundException("Équipe introuvable"));
 
         reclamation.setEquipeAssignee(equipe);
+        reclamation.setAgentAssigne(null);
         reclamation.setMotifRefus(null);
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setStatut(ReclamationStatus.EN_ATTENTE);
@@ -212,32 +209,6 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         return reclamationMapper.toResponse(saved);
-    }
-
-    private String generateNumeroReclamation() {
-        String numero;
-        do {
-            long count = reclamationRepository.count() + 1;
-            int year = LocalDate.now().getYear();
-            numero = String.format("REC-%d-%04d", year, count);
-        } while (reclamationRepository.existsByNumeroReclamation(numero));
-        return numero;
-    }
-
-    private ReclamationCategory parseCategorie(String categorie) {
-        try {
-            return ReclamationCategory.valueOf(categorie.trim().toUpperCase());
-        } catch (Exception e) {
-            throw new BadRequestException("Catégorie invalide");
-        }
-    }
-
-    private ReclamationPriority parsePriorite(String priorite) {
-        try {
-            return ReclamationPriority.valueOf(priorite.trim().toUpperCase());
-        } catch (Exception e) {
-            throw new BadRequestException("Priorité invalide");
-        }
     }
 
     @Override
@@ -268,6 +239,7 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         reclamation.setStatut(ReclamationStatus.REJETEE);
         reclamation.setMotifRefus(motif);
+        reclamation.setAgentAssigne(null);
         reclamation.setEquipeAssignee(null);
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setDateResolution(LocalDateTime.now());
@@ -338,6 +310,9 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         reclamation.setStatut(ReclamationStatus.EN_COURS);
+
+
+
         reclamation.setDateMiseAJour(LocalDateTime.now());
 
         slaCalculationService.recalculerSlaStatus(reclamation);
@@ -365,6 +340,9 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new UnauthorizedException("Cette réclamation n'est pas assignée à l'équipe de l'agent");
         }
 
+        // IMPORTANT : on garde l’agent responsable
+        reclamation.setAgentAssigne(agent);
+
         reclamation.setStatut(ReclamationStatus.TRAITEE);
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setDateResolution(LocalDateTime.now());
@@ -372,5 +350,31 @@ public class ReclamationServiceImpl implements ReclamationService {
         slaCalculationService.recalculerSlaStatus(reclamation);
 
         return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
+    }
+
+    private String generateNumeroReclamation() {
+        String numero;
+        do {
+            long count = reclamationRepository.count() + 1;
+            int year = LocalDate.now().getYear();
+            numero = String.format("REC-%d-%04d", year, count);
+        } while (reclamationRepository.existsByNumeroReclamation(numero));
+        return numero;
+    }
+
+    private ReclamationCategory parseCategorie(String categorie) {
+        try {
+            return ReclamationCategory.valueOf(categorie.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new BadRequestException("Catégorie invalide");
+        }
+    }
+
+    private ReclamationPriority parsePriorite(String priorite) {
+        try {
+            return ReclamationPriority.valueOf(priorite.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new BadRequestException("Priorité invalide");
+        }
     }
 }

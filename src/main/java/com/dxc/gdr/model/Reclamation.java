@@ -64,6 +64,10 @@ public class Reclamation {
     @JoinColumn(name = "equipe_assignee_id")
     private Equipe equipeAssignee;
 
+    @ManyToOne
+    @JoinColumn(name = "agent_id")
+    private User agentAssigne;
+
     // ===== AJOUT SLA =====
 
     @Column(name = "sla_deadline")
@@ -253,5 +257,13 @@ public class Reclamation {
 
     public void setDateResolution(LocalDateTime dateResolution) {
         this.dateResolution = dateResolution;
+    }
+
+    public User getAgentAssigne() {
+        return agentAssigne;
+    }
+
+    public void setAgentAssigne(User agentAssigne) {
+        this.agentAssigne = agentAssigne;
     }
 }

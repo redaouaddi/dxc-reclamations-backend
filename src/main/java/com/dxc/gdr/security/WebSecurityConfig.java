@@ -53,6 +53,7 @@ public class WebSecurityConfig {
                         auth
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/face/login").permitAll()
+                                .requestMatchers("/api/chatbot/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated()
                 )
