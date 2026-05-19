@@ -19,8 +19,9 @@ public class SlaAdminController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SlaConfigurationResponse>> getAll() {
-        return ResponseEntity.ok(slaAdminService.getAll());
+    public ResponseEntity<org.springframework.data.domain.Page<SlaConfigurationResponse>> getAll(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(slaAdminService.getAll(pageable));
     }
 
     @PostMapping

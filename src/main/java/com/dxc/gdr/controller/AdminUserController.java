@@ -42,8 +42,9 @@ public class AdminUserController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('LIRE_UTILISATEURS') or hasRole('ADMIN')")
-    public List<UserDto> getAll() {
-        return userService.getAll();
+    public org.springframework.data.domain.Page<UserDto> getAll(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return userService.getAll(pageable);
     }
 
     @DeleteMapping("/{id}")

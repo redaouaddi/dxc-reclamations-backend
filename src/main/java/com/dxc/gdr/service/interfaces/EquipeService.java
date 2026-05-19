@@ -12,7 +12,7 @@ public interface EquipeService {
     EquipeResponse creerEquipe(CreateEquipeRequest request);
 
     /** ADMIN : liste toutes les équipes */
-    List<EquipeResponse> listerEquipes();
+    org.springframework.data.domain.Page<EquipeResponse> listerEquipes(org.springframework.data.domain.Pageable pageable);
 
     /** ADMIN : modifie le nom et le chef d'une équipe */
     EquipeResponse modifierEquipeAdmin(Long id, com.dxc.gdr.Dto.request.UpdateEquipeAdminRequest request);
@@ -30,5 +30,8 @@ public interface EquipeService {
     EquipeResponse mettreAJourNom(String chefEmail, UpdateEquipeRequest request);
 
     /** Utilitaire : liste les agents sans équipe */
-    List<EquipeResponse.AgentResponse> listerAgentsLibres();
+    org.springframework.data.domain.Page<EquipeResponse.AgentResponse> listerAgentsLibres(org.springframework.data.domain.Pageable pageable);
+
+    /** ADMIN : supprime une équipe */
+    void supprimerEquipe(Long id, Long targetTeamId);
 }

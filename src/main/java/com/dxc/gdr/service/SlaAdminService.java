@@ -19,14 +19,13 @@ public class SlaAdminService {
         this.slaConfigurationRepository = slaConfigurationRepository;
     }
 
-    public List<SlaConfigurationResponse> getAll() {
-        return slaConfigurationRepository.findAll().stream()
+    public org.springframework.data.domain.Page<SlaConfigurationResponse> getAll(org.springframework.data.domain.Pageable pageable) {
+        return slaConfigurationRepository.findAll(pageable)
                 .map(cfg -> new SlaConfigurationResponse(
                         cfg.getId(),
                         cfg.getPriorite().name(),
                         cfg.getDelaiHeures()
-                ))
-                .toList();
+                ));
     }
 
     public SlaConfigurationResponse saveOrUpdate(SlaConfigurationRequest request) {

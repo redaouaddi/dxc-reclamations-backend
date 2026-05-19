@@ -25,10 +25,9 @@ public class AccessService {
         this.accessMapper = accessMapper;
     }
 
-    public List<AccessDto> getAll() {
-        return accessRepository.findAll().stream()
-                .map(accessMapper::toDto)
-                .toList();
+    public org.springframework.data.domain.Page<AccessDto> getAll(org.springframework.data.domain.Pageable pageable) {
+        return accessRepository.findAll(pageable)
+                .map(accessMapper::toDto);
     }
 
     public AccessDto create(AccessDto dto) {

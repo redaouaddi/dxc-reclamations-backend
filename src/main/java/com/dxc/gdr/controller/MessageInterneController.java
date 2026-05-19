@@ -6,6 +6,7 @@ import com.dxc.gdr.service.MessageInterneService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,8 +28,19 @@ public class MessageInterneController {
         return messageInterneService.envoyerMessage(request, authentication.getName());
     }
 
+    @PostMapping(value = "/{reclamationId}/avec-fichier", consumes = {"multipart/form-data"})
+    public MessageInterneResponse envoyerMessageAvecFichier(
+            @PathVariable Long reclamationId,
+            @RequestParam("contenu") String contenu,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication) {
+        return messageInterneService.envoyerMessageAvecFichier(reclamationId, contenu, file, authentication.getName());
+    }
+
     @GetMapping("/reclamation/{reclamationId}")
-    public List<MessageInterneResponse> getMessagesByReclamation(@PathVariable Long reclamationId) {
-        return messageInterneService.getMessagesByReclamation(reclamationId);
+    public org.springframework.data.domain.Page<MessageInterneResponse> getMessagesByReclamation(
+            @PathVariable Long reclamationId,
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return messageInterneService.getMessagesByReclamation(reclamationId, pageable);
     }
 }

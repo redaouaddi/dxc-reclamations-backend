@@ -80,6 +80,24 @@ public class Reclamation {
     @Column(name = "date_resolution")
     private LocalDateTime dateResolution;
 
+    @Column(name = "cause_identifiee", columnDefinition = "TEXT")
+    private String causeIdentifiee;
+
+    @Column(name = "action_realisee", columnDefinition = "TEXT")
+    private String actionRealisee;
+
+    @Column(name = "solution_proposee", columnDefinition = "TEXT")
+    private String solutionProposee;
+
+    @Column(name = "motif_reouverture", columnDefinition = "TEXT")
+    private String motifReouverture;
+
+    @Column(name = "reouverture_attachment_name")
+    private String reouvertureAttachmentName;
+
+    @Column(name = "reouverture_attachment_path")
+    private String reouvertureAttachmentPath;
+
     // ===== CONSTRUCTEURS =====
 
     public Reclamation() {
@@ -259,6 +277,30 @@ public class Reclamation {
         this.dateResolution = dateResolution;
     }
 
+    public String getCauseIdentifiee() {
+        return causeIdentifiee;
+    }
+
+    public void setCauseIdentifiee(String causeIdentifiee) {
+        this.causeIdentifiee = causeIdentifiee;
+    }
+
+    public String getActionRealisee() {
+        return actionRealisee;
+    }
+
+    public void setActionRealisee(String actionRealisee) {
+        this.actionRealisee = actionRealisee;
+    }
+
+    public String getSolutionProposee() {
+        return solutionProposee;
+    }
+
+    public void setSolutionProposee(String solutionProposee) {
+        this.solutionProposee = solutionProposee;
+    }
+
     public User getAgentAssigne() {
         return agentAssigne;
     }
@@ -266,4 +308,28 @@ public class Reclamation {
     public void setAgentAssigne(User agentAssigne) {
         this.agentAssigne = agentAssigne;
     }
-}
+
+    public String getMotifReouverture() {
+        return motifReouverture;
+    }
+
+    public void setMotifReouverture(String motifReouverture) {
+        this.motifReouverture = motifReouverture;
+    }
+
+    public String getReouvertureAttachmentName() {
+        return reouvertureAttachmentName;
+    }
+
+    public void setReouvertureAttachmentName(String reouvertureAttachmentName) {
+        this.reouvertureAttachmentName = reouvertureAttachmentName;
+    }
+
+    public String getReouvertureAttachmentPath() {
+        return reouvertureAttachmentPath;
+    }
+
+    public void setReouvertureAttachmentPath(String reouvertureAttachmentPath) {
+        this.reouvertureAttachmentPath = reouvertureAttachmentPath;
+    }
+}

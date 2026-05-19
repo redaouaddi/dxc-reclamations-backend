@@ -19,7 +19,13 @@ public class ReclamationResponse {
     private LocalDateTime slaDeadline;
     private String slaStatus;
     private LocalDateTime dateResolution;
+    private String causeIdentifiee;
+    private String actionRealisee;
+    private String solutionProposee;
     private String agentNom;
+    private String motifReouverture;
+    private String reouvertureAttachmentName;
+    private String reouvertureAttachmentPath;
 
     public ReclamationResponse() {
     }
@@ -160,6 +166,30 @@ public class ReclamationResponse {
         this.dateResolution = dateResolution;
     }
 
+    public String getCauseIdentifiee() {
+        return causeIdentifiee;
+    }
+
+    public void setCauseIdentifiee(String causeIdentifiee) {
+        this.causeIdentifiee = causeIdentifiee;
+    }
+
+    public String getActionRealisee() {
+        return actionRealisee;
+    }
+
+    public void setActionRealisee(String actionRealisee) {
+        this.actionRealisee = actionRealisee;
+    }
+
+    public String getSolutionProposee() {
+        return solutionProposee;
+    }
+
+    public void setSolutionProposee(String solutionProposee) {
+        this.solutionProposee = solutionProposee;
+    }
+
     public String getAgentNom() {
         return agentNom;
     }
@@ -167,4 +197,28 @@ public class ReclamationResponse {
     public void setAgentNom(String agentNom) {
         this.agentNom = agentNom;
     }
-}
+
+    public String getMotifReouverture() {
+        return motifReouverture;
+    }
+
+    public void setMotifReouverture(String motifReouverture) {
+        this.motifReouverture = motifReouverture;
+    }
+
+    public String getReouvertureAttachmentName() {
+        return reouvertureAttachmentName;
+    }
+
+    public void setReouvertureAttachmentName(String reouvertureAttachmentName) {
+        this.reouvertureAttachmentName = reouvertureAttachmentName;
+    }
+
+    public String getReouvertureAttachmentPath() {
+        return reouvertureAttachmentPath;
+    }
+
+    public void setReouvertureAttachmentPath(String reouvertureAttachmentPath) {
+        this.reouvertureAttachmentPath = reouvertureAttachmentPath;
+    }
+}

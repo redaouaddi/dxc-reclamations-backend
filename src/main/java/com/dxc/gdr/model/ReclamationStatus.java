@@ -4,5 +4,6 @@ public enum ReclamationStatus {
     EN_ATTENTE,
     EN_COURS,
     TRAITEE,
-    REJETEE
+    REJETEE,
+    REOUVERTE
 }

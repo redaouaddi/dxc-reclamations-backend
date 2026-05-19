@@ -19,8 +19,9 @@ public class AccessController {
     }
 
     @GetMapping
-    public List<AccessDto> getAll() {
-        return accessService.getAll();
+    public org.springframework.data.domain.Page<AccessDto> getAll(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return accessService.getAll(pageable);
     }
 
     @PostMapping

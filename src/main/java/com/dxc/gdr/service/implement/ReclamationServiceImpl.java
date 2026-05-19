@@ -14,6 +14,8 @@ import com.dxc.gdr.model.*;
 import com.dxc.gdr.service.SlaCalculationService;
 import com.dxc.gdr.service.interfaces.EmailService;
 import com.dxc.gdr.service.interfaces.ReclamationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -130,15 +132,15 @@ public class ReclamationServiceImpl implements ReclamationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReclamationResponse> getMyReclamations(String userEmail) {
+    public Page<ReclamationResponse> getMyReclamations(String userEmail, Pageable pageable) {
         User client = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
-        return reclamationRepository.findByClientIdOrderByDateCreationDesc(client.getId())
-                .stream()
-                .peek(slaCalculationService::recalculerSlaStatus)
-                .map(reclamationMapper::toResponse)
-                .toList();
+        return reclamationRepository.findByClientIdOrderByDateCreationDesc(client.getId(), pageable)
+                .map(r -> {
+                    slaCalculationService.recalculerSlaStatus(r);
+                    return reclamationMapper.toResponse(r);
+                });
     }
 
     @Override
@@ -162,13 +164,13 @@ public class ReclamationServiceImpl implements ReclamationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReclamationResponse> getNouvellesReclamations() {
+    public Page<ReclamationResponse> getNouvellesReclamations(Pageable pageable) {
         return reclamationRepository.findByStatutInOrderByDateCreationDesc(
-                        List.of(ReclamationStatus.EN_ATTENTE, ReclamationStatus.REJETEE))
-                .stream()
-                .peek(slaCalculationService::recalculerSlaStatus)
-                .map(reclamationMapper::toResponse)
-                .toList();
+                        List.of(ReclamationStatus.EN_ATTENTE, ReclamationStatus.REJETEE), pageable)
+                .map(r -> {
+                    slaCalculationService.recalculerSlaStatus(r);
+                    return reclamationMapper.toResponse(r);
+                });
     }
 
     @Override
@@ -213,12 +215,18 @@ public class ReclamationServiceImpl implements ReclamationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReclamationResponse> getAllReclamations() {
-        return reclamationRepository.findAll()
-                .stream()
-                .peek(slaCalculationService::recalculerSlaStatus)
-                .map(reclamationMapper::toResponse)
-                .toList();
+    public Page<ReclamationResponse> getAllReclamations(ReclamationStatus statut, Pageable pageable) {
+        Page<Reclamation> page;
+        if (statut != null) {
+            page = reclamationRepository.findByStatut(statut, pageable);
+        } else {
+            page = reclamationRepository.findAll(pageable);
+        }
+
+        return page.map(r -> {
+            slaCalculationService.recalculerSlaStatus(r);
+            return reclamationMapper.toResponse(r);
+        });
     }
 
     @Override
@@ -251,17 +259,17 @@ public class ReclamationServiceImpl implements ReclamationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReclamationResponse> getReclamationsParEquipe(Long equipeId) {
-        return reclamationRepository.findAllByTeamId(equipeId)
-                .stream()
-                .peek(slaCalculationService::recalculerSlaStatus)
-                .map(reclamationMapper::toResponse)
-                .toList();
+    public Page<ReclamationResponse> getReclamationsParEquipe(Long equipeId, Pageable pageable) {
+        return reclamationRepository.findAllByTeamId(equipeId, pageable)
+                .map(r -> {
+                    slaCalculationService.recalculerSlaStatus(r);
+                    return reclamationMapper.toResponse(r);
+                });
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReclamationResponse> getMissionsAgent(String agentEmail) {
+    public Page<ReclamationResponse> getMissionsAgent(String agentEmail, Pageable pageable) {
         User user = userRepository.findByEmail(agentEmail)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
@@ -272,14 +280,27 @@ public class ReclamationServiceImpl implements ReclamationService {
         }
 
         if (equipe == null) {
-            return List.of();
+            return org.springframework.data.domain.Page.empty();
         }
 
-        return reclamationRepository.findAllByTeamId(equipe.getId())
-                .stream()
-                .peek(slaCalculationService::recalculerSlaStatus)
-                .map(reclamationMapper::toResponse)
-                .toList();
+        // Si l'utilisateur est le chef de cette équipe, il voit tout (pour pouvoir confirmer)
+        if (equipe.getChefEquipe() != null && equipe.getChefEquipe().getId().equals(user.getId())) {
+            return reclamationRepository.findAllByTeamId(equipe.getId(), pageable)
+                    .map(r -> {
+                        slaCalculationService.recalculerSlaStatus(r);
+                        return reclamationMapper.toResponse(r);
+                    });
+        }
+
+        // Sinon (Agent simple), il ne voit que les réclamations confirmées ou déjà traitées ou réouvertes
+        return reclamationRepository.findByEquipeAssigneeIdAndStatutIn(
+                equipe.getId(),
+                List.of(ReclamationStatus.EN_COURS, ReclamationStatus.TRAITEE, ReclamationStatus.REOUVERTE),
+                pageable)
+                .map(r -> {
+                    slaCalculationService.recalculerSlaStatus(r);
+                    return reclamationMapper.toResponse(r);
+                });
     }
 
     @Override
@@ -321,36 +342,122 @@ public class ReclamationServiceImpl implements ReclamationService {
     }
 
     @Override
-    public ReclamationResponse marquerResolue(String numeroReclamation, String userEmail) {
+    public ReclamationResponse marquerResolue(String numeroReclamation, String userEmail, String cause, String action, String solution) {
         Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
                 .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
 
-        User agent = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("Agent introuvable"));
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
 
-        if (agent.getEquipe() == null) {
-            throw new UnauthorizedException("L'agent n'appartient à aucune équipe");
+        // Vérifier si l'utilisateur est ADMIN
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(r -> "ROLE_ADMIN".equals(r.getName()) || "ADMIN".equals(r.getName()));
+
+        if (!isAdmin) {
+            Equipe equipeMembre = user.getEquipe();
+            Equipe equipeGeree = equipeRepository.findByChefEquipeId(user.getId()).orElse(null);
+            
+            if (reclamation.getEquipeAssignee() == null) {
+                throw new BadRequestException("Cette réclamation n'est assignée à aucune équipe");
+            }
+
+            Long targetTeamId = reclamation.getEquipeAssignee().getId();
+            boolean authorized = false;
+
+            if (equipeMembre != null && equipeMembre.getId().equals(targetTeamId)) {
+                authorized = true;
+            }
+            if (!authorized && equipeGeree != null && equipeGeree.getId().equals(targetTeamId)) {
+                authorized = true;
+            }
+
+            if (!authorized) {
+                throw new UnauthorizedException("Cette réclamation n'est pas assignée à une équipe que vous dirigez ou dont vous faites partie");
+            }
         }
 
-        if (reclamation.getEquipeAssignee() == null) {
-            throw new BadRequestException("Cette réclamation n'est assignée à aucune équipe");
+        // Vérification du statut : une réclamation doit être confirmée (EN_COURS) avant d'être résolue
+        if (reclamation.getStatut() == ReclamationStatus.EN_ATTENTE) {
+            throw new BadRequestException("Cette réclamation doit d'abord être confirmée par le chef d'équipe avant d'être résolue.");
         }
 
-        if (!reclamation.getEquipeAssignee().getId().equals(agent.getEquipe().getId())) {
-            throw new UnauthorizedException("Cette réclamation n'est pas assignée à l'équipe de l'agent");
-        }
-
-        // IMPORTANT : on garde l’agent responsable
-        reclamation.setAgentAssigne(agent);
+        // On garde l’utilisateur actuel comme agent responsable
+        reclamation.setAgentAssigne(user);
 
         reclamation.setStatut(ReclamationStatus.TRAITEE);
         reclamation.setDateMiseAJour(LocalDateTime.now());
         reclamation.setDateResolution(LocalDateTime.now());
+        
+        reclamation.setCauseIdentifiee(cause);
+        reclamation.setActionRealisee(action);
+        reclamation.setSolutionProposee(solution);
 
         slaCalculationService.recalculerSlaStatus(reclamation);
 
         return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
     }
+
+    @Override
+    public ReclamationResponse reouvrirReclamation(String numeroReclamation, String motif, org.springframework.web.multipart.MultipartFile file, String userEmail) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Une pièce jointe est obligatoire pour réouvrir la réclamation.");
+        }
+
+        Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
+                .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        // Vérifier que c'est bien le client propriétaire qui réouvre
+        if (!reclamation.getClient().getEmail().equals(userEmail)) {
+            throw new UnauthorizedException("Seul le client ayant créé la réclamation peut la réouvrir");
+        }
+
+        // Vérifier le statut (on ne peut réouvrir qu'une réclamation TRAITEE)
+        if (reclamation.getStatut() != ReclamationStatus.TRAITEE) {
+            throw new BadRequestException("Seules les réclamations traitées peuvent être réouvertes");
+        }
+
+        // Sauvegarde de la pièce jointe de réouverture
+        try {
+            String originalFilename = file.getOriginalFilename();
+            reclamation.setReouvertureAttachmentName(originalFilename);
+
+            String baseUploadDir = System.getProperty("user.home")
+                    + java.io.File.separator + "gdr_uploads"
+                    + java.io.File.separator + "ref Reclamation"
+                    + java.io.File.separator + reclamation.getNumeroReclamation();
+
+            java.io.File dir = new java.io.File(baseUploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            String extension = "";
+            if (originalFilename != null && originalFilename.lastIndexOf(".") > 0) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+
+            String uniqueFilename = java.util.UUID.randomUUID() + extension;
+            String filePath = baseUploadDir + java.io.File.separator + uniqueFilename;
+
+            file.transferTo(new java.io.File(filePath));
+            reclamation.setReouvertureAttachmentPath(filePath);
+
+        } catch (java.io.IOException e) {
+            throw new BadRequestException("Erreur de sauvegarde de fichier");
+        }
+
+        reclamation.setStatut(ReclamationStatus.REOUVERTE);
+        reclamation.setMotifReouverture(motif);
+        reclamation.setDateMiseAJour(LocalDateTime.now());
+        
+        // On remet la date de résolution à null car elle est à nouveau "en cours"
+        reclamation.setDateResolution(null);
+
+        slaCalculationService.recalculerSlaStatus(reclamation);
+
+        return reclamationMapper.toResponse(reclamationRepository.save(reclamation));
+    }
+
 
     private String generateNumeroReclamation() {
         String numero;
@@ -377,4 +484,59 @@ public class ReclamationServiceImpl implements ReclamationService {
             throw new BadRequestException("Priorité invalide");
         }
     }
-}
+
+    @Override
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadAttachment(String numeroReclamation) {
+        Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
+                .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        String filePath = reclamation.getAttachmentPath();
+        String fileName = reclamation.getAttachmentName();
+
+        return getFileResponseEntity(filePath, fileName);
+    }
+
+    @Override
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadReouvertureAttachment(String numeroReclamation) {
+        Reclamation reclamation = reclamationRepository.findByNumeroReclamation(numeroReclamation)
+                .orElseThrow(() -> new NotFoundException("Réclamation introuvable"));
+
+        String filePath = reclamation.getReouvertureAttachmentPath();
+        String fileName = reclamation.getReouvertureAttachmentName();
+
+        return getFileResponseEntity(filePath, fileName);
+    }
+
+    private org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> getFileResponseEntity(String filePath, String fileName) {
+        if (filePath == null || filePath.isEmpty()) {
+            throw new BadRequestException("Aucun fichier n'est associé à cette réclamation.");
+        }
+
+        try {
+            java.nio.file.Path path = java.nio.file.Paths.get(filePath);
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new NotFoundException("Le fichier physique est introuvable sur le serveur.");
+            }
+
+            String contentType = "application/octet-stream";
+            try {
+                contentType = java.nio.file.Files.probeContentType(path);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+            } catch (Exception ex) {
+                // fall back to default
+            }
+
+            return org.springframework.http.ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(resource);
+
+        } catch (java.net.MalformedURLException e) {
+            throw new BadRequestException("Erreur lors de la lecture du fichier : " + e.getMessage());
+        }
+    }
+}

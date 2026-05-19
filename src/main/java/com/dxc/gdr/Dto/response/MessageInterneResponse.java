@@ -11,12 +11,15 @@ public class MessageInterneResponse {
     private Long auteurId;
     private String auteurNom;
     private Long reclamationId;
+    private String attachmentName;
+    private String attachmentPath;
 
     public MessageInterneResponse() {
     }
 
     public MessageInterneResponse(Long id, String contenu, LocalDateTime dateEnvoi,
-                                  Boolean lu, Long auteurId, String auteurNom, Long reclamationId) {
+                                  Boolean lu, Long auteurId, String auteurNom, Long reclamationId,
+                                  String attachmentName, String attachmentPath) {
         this.id = id;
         this.contenu = contenu;
         this.dateEnvoi = dateEnvoi;
@@ -24,6 +27,8 @@ public class MessageInterneResponse {
         this.auteurId = auteurId;
         this.auteurNom = auteurNom;
         this.reclamationId = reclamationId;
+        this.attachmentName = attachmentName;
+        this.attachmentPath = attachmentPath;
     }
 
     public Long getId() {
@@ -81,4 +86,20 @@ public class MessageInterneResponse {
     public void setReclamationId(Long reclamationId) {
         this.reclamationId = reclamationId;
     }
-}
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public String getAttachmentPath() {
+        return attachmentPath;
+    }
+
+    public void setAttachmentPath(String attachmentPath) {
+        this.attachmentPath = attachmentPath;
+    }
+}

@@ -33,8 +33,9 @@ public class EquipeController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('CREER_EQUIPE') or hasAuthority('ASSIGNER_RECLAMATIONS') or hasRole('ADMIN')")
-    public List<EquipeResponse> listerEquipes() {
-        return equipeService.listerEquipes();
+    public org.springframework.data.domain.Page<EquipeResponse> listerEquipes(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return equipeService.listerEquipes(pageable);
     }
 
     // ─── ADMIN : Modifier une équipe (nom + chef) ─────────────────────────────
@@ -88,7 +89,14 @@ public class EquipeController {
 
     @GetMapping("/agents-libres")
     @PreAuthorize("hasAuthority('CREER_EQUIPE') or hasRole('ADMIN')")
-    public List<EquipeResponse.AgentResponse> listerAgentsLibres() {
-        return equipeService.listerAgentsLibres();
+    public org.springframework.data.domain.Page<EquipeResponse.AgentResponse> listerAgentsLibres(
+            @org.springframework.data.web.PageableDefault(size = 10) org.springframework.data.domain.Pageable pageable) {
+        return equipeService.listerAgentsLibres(pageable);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('CREER_EQUIPE') or hasRole('ADMIN')")
+    public void supprimerEquipe(@PathVariable Long id, @RequestParam(required = false) Long targetTeamId) {
+        equipeService.supprimerEquipe(id, targetTeamId);
     }
 }

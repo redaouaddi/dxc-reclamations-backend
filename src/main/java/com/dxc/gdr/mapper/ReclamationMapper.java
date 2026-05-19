@@ -47,6 +47,13 @@ public class ReclamationMapper {
         response.setSlaStatus(reclamation.getSlaStatus() != null ? reclamation.getSlaStatus().name() : null);
         response.setDateResolution(reclamation.getDateResolution());
 
+        response.setCauseIdentifiee(reclamation.getCauseIdentifiee());
+        response.setActionRealisee(reclamation.getActionRealisee());
+        response.setSolutionProposee(reclamation.getSolutionProposee());
+        response.setMotifReouverture(reclamation.getMotifReouverture());
+        response.setReouvertureAttachmentName(reclamation.getReouvertureAttachmentName());
+        response.setReouvertureAttachmentPath(reclamation.getReouvertureAttachmentPath());
+
         return response;
     }
 

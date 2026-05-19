@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface MessageInterneRepository extends JpaRepository<MessageInterne, Long> {
 
-    List<MessageInterne> findByReclamationIdOrderByDateEnvoiAsc(Long reclamationId);
+    org.springframework.data.domain.Page<MessageInterne> findByReclamationIdOrderByDateEnvoiAsc(Long reclamationId, org.springframework.data.domain.Pageable pageable);
 }

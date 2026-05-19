@@ -7,6 +7,8 @@ import com.dxc.gdr.service.interfaces.ReclamationService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,41 +20,50 @@ import java.util.List;
 public class ReclamationController {
 
     private final ReclamationService reclamationService;
+
     public ReclamationController(ReclamationService reclamationService) {
         this.reclamationService = reclamationService;
     }
-    @PostMapping(consumes = {"multipart/form-data"})
+
+    @PostMapping(consumes = { "multipart/form-data" })
     @PreAuthorize("hasRole('CLIENT')")
     public ReclamationResponse createReclamation(@ModelAttribute @Valid CreateReclamationRequest request,
-                                                 @RequestParam(value = "file", required = false) MultipartFile file,
-                                                 Authentication authentication) {
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            Authentication authentication) {
         return reclamationService.createReclamation(request, file, authentication.getName());
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_MANAGER') or hasAuthority('CONSULTER_RAPPORTS')")
-    public List<ReclamationResponse> getAllReclamations() {
-        return reclamationService.getAllReclamations();
+    public Page<ReclamationResponse> getAllReclamations(
+            @RequestParam(name = "statut", required = false) com.dxc.gdr.model.ReclamationStatus statut,
+            @org.springframework.data.web.PageableDefault(size = 10) Pageable pageable) {
+        return reclamationService.getAllReclamations(statut, pageable);
     }
 
     @GetMapping("/mes-reclamations")
     @PreAuthorize("hasRole('CLIENT')")
-    public List<ReclamationResponse> getMyReclamations(Authentication authentication) {
-        return reclamationService.getMyReclamations(authentication.getName());
+    public Page<ReclamationResponse> getMyReclamations(
+            Authentication authentication,
+            @org.springframework.data.web.PageableDefault(size = 10) Pageable pageable) {
+        return reclamationService.getMyReclamations(authentication.getName(), pageable);
     }
 
     @GetMapping("/mes-missions")
-    @PreAuthorize("hasRole('AGENT') or hasRole('CHEF_EQUIPE') or hasRole('ADMIN')")
-    public List<ReclamationResponse> getMyMissions(Authentication authentication) {
-        return reclamationService.getMissionsAgent(authentication.getName());
+    @PreAuthorize("hasAuthority('AGENT') or hasAuthority('CHEF_EQUIPE') or hasAuthority('ADMIN') or hasAuthority('SERVICE_MANAGER')")
+    public Page<ReclamationResponse> getMyMissions(
+            Authentication authentication,
+            @org.springframework.data.web.PageableDefault(size = 10) Pageable pageable) {
+        return reclamationService.getMissionsAgent(authentication.getName(), pageable);
     }
 
     @GetMapping("/{numeroReclamation}/statut")
     @PreAuthorize("hasRole('CLIENT')")
     public ReclamationStatusResponse getReclamationStatus(@PathVariable String numeroReclamation,
-                                                          Authentication authentication) {
+            Authentication authentication) {
         return reclamationService.getReclamationStatus(numeroReclamation, authentication.getName());
     }
+
     @GetMapping("/count")
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('CONSULTER_RAPPORTS')")
     public long countReclamations() {
@@ -61,8 +72,9 @@ public class ReclamationController {
 
     @GetMapping("/nouvelles")
     @PreAuthorize("hasAuthority('VOIR_NOUVELLES_RECLAMATIONS') or hasRole('ADMIN')")
-    public List<ReclamationResponse> getNouvellesReclamations() {
-        return reclamationService.getNouvellesReclamations();
+    public Page<ReclamationResponse> getNouvellesReclamations(
+            @org.springframework.data.web.PageableDefault(size = 10) Pageable pageable) {
+        return reclamationService.getNouvellesReclamations(pageable);
     }
 
     @GetMapping("/{numeroReclamation}")
@@ -70,7 +82,6 @@ public class ReclamationController {
     public ReclamationResponse getReclamationDetails(@PathVariable String numeroReclamation) {
         return reclamationService.getReclamationDetails(numeroReclamation);
     }
-
 
     @PutMapping("/{numeroReclamation}/assigner-equipe")
     @PreAuthorize("hasAuthority('ASSIGNER_RECLAMATIONS') or hasRole('ADMIN')")
@@ -91,12 +102,14 @@ public class ReclamationController {
 
     @GetMapping("/equipe/{equipeId}")
     @PreAuthorize("hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
-    public List<ReclamationResponse> getReclamationsParEquipe(@PathVariable Long equipeId) {
-        return reclamationService.getReclamationsParEquipe(equipeId);
+    public Page<ReclamationResponse> getReclamationsParEquipe(
+            @PathVariable Long equipeId,
+            @org.springframework.data.web.PageableDefault(size = 10) Pageable pageable) {
+        return reclamationService.getReclamationsParEquipe(equipeId, pageable);
     }
 
     @PutMapping("/{numeroReclamation}/accepter")
-    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('ADMIN')")
     public ReclamationResponse accepterReclamation(
             @PathVariable String numeroReclamation,
             Authentication authentication) {
@@ -107,8 +120,21 @@ public class ReclamationController {
     @PreAuthorize("hasAuthority('GERER_EQUIPE') or hasRole('CHEF_EQUIPE') or hasRole('AGENT') or hasRole('ADMIN')")
     public ReclamationResponse marquerResolue(
             @PathVariable String numeroReclamation,
+            @RequestParam(value = "cause", required = false) String cause,
+            @RequestParam(value = "action", required = false) String action,
+            @RequestParam(value = "solution", required = false) String solution,
             Authentication authentication) {
-        return reclamationService.marquerResolue(numeroReclamation, authentication.getName());
+        return reclamationService.marquerResolue(numeroReclamation, authentication.getName(), cause, action, solution);
+    }
+
+    @PutMapping(value = "/{numeroReclamation}/reouvrir", consumes = { "multipart/form-data" })
+    @PreAuthorize("hasRole('CLIENT')")
+    public ReclamationResponse reouvrirReclamation(
+            @PathVariable String numeroReclamation,
+            @RequestParam("motif") String motif,
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        return reclamationService.reouvrirReclamation(numeroReclamation, motif, file, authentication.getName());
     }
 
     @PostMapping("/json")
@@ -119,4 +145,18 @@ public class ReclamationController {
 
         return reclamationService.createReclamation(request, null, authentication.getName());
     }
-}
+
+    @GetMapping("/{numeroReclamation}/telecharger-piece-jointe")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_MANAGER') or hasRole('CLIENT') or hasRole('CHEF_EQUIPE') or hasRole('AGENT')")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadAttachment(
+            @PathVariable String numeroReclamation) {
+        return reclamationService.downloadAttachment(numeroReclamation);
+    }
+
+    @GetMapping("/{numeroReclamation}/telecharger-piece-jointe-reouverture")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE_MANAGER') or hasRole('CLIENT') or hasRole('CHEF_EQUIPE') or hasRole('AGENT')")
+    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> downloadReouvertureAttachment(
+            @PathVariable String numeroReclamation) {
+        return reclamationService.downloadReouvertureAttachment(numeroReclamation);
+    }
+}

@@ -10,6 +10,7 @@ public class EquipeResponse {
     private String chefEquipeEmail;
     private Long chefEquipeId;
     private int nombreAgents;
+    private int nombreReclamations;
     private List<AgentResponse> agents;
 
     public static class AgentResponse {
@@ -57,6 +58,9 @@ public class EquipeResponse {
 
     public int getNombreAgents() { return nombreAgents; }
     public void setNombreAgents(int nombreAgents) { this.nombreAgents = nombreAgents; }
+
+    public int getNombreReclamations() { return nombreReclamations; }
+    public void setNombreReclamations(int nombreReclamations) { this.nombreReclamations = nombreReclamations; }
 
     public List<AgentResponse> getAgents() { return agents; }
     public void setAgents(List<AgentResponse> agents) { this.agents = agents; }

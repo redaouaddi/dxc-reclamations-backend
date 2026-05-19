@@ -18,6 +18,12 @@ public class SlaCalculationService {
     }
 
     public void initialiserSla(Reclamation reclamation) {
+        if (!com.dxc.gdr.model.ReclamationCategory.MAINTENANCE.equals(reclamation.getCategorie())) {
+            reclamation.setSlaDeadline(null);
+            reclamation.setSlaStatus(null);
+            return;
+        }
+
         LocalDateTime now = LocalDateTime.now();
 
         if (reclamation.getDateCreation() == null) {
@@ -30,6 +36,10 @@ public class SlaCalculationService {
     }
 
     public SlaStatus calculerSlaStatus(Reclamation reclamation) {
+        if (!com.dxc.gdr.model.ReclamationCategory.MAINTENANCE.equals(reclamation.getCategorie())) {
+            return null;
+        }
+
         if (reclamation.getSlaDeadline() == null) {
             return SlaStatus.EN_COURS;
         }

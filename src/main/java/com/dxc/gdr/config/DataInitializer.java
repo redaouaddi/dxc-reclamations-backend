@@ -32,6 +32,10 @@ public class DataInitializer implements CommandLineRunner {
         // FIX : Supprimer la contrainte de check sur l'enum si elle bloque les nouvelles permissions (PostgreSQL)
         try {
             jdbcTemplate.execute("ALTER TABLE access_permissions DROP CONSTRAINT IF EXISTS access_permissions_permission_check");
+            jdbcTemplate.execute("ALTER TABLE reclamations DROP CONSTRAINT IF EXISTS reclamations_statut_check");
+            jdbcTemplate.execute("ALTER TABLE reclamations ADD COLUMN IF NOT EXISTS motif_reouverture TEXT");
+            jdbcTemplate.execute("ALTER TABLE reclamations ADD COLUMN IF NOT EXISTS reouverture_attachment_name VARCHAR(255)");
+            jdbcTemplate.execute("ALTER TABLE reclamations ADD COLUMN IF NOT EXISTS reouverture_attachment_path VARCHAR(255)");
         } catch (Exception e) {
             System.out.println("ℹ️ Info : Pas de contrainte à supprimer ou erreur SQL mineure : " + e.getMessage());
         }

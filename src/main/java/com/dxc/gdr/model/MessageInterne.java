@@ -29,6 +29,12 @@ public class MessageInterne {
     @JoinColumn(name = "reclamation_id", nullable = false)
     private Reclamation reclamation;
 
+    @Column(name = "attachment_name")
+    private String attachmentName;
+
+    @Column(name = "attachment_path")
+    private String attachmentPath;
+
     public MessageInterne() {
     }
 
@@ -74,5 +80,21 @@ public class MessageInterne {
 
     public void setReclamation(Reclamation reclamation) {
         this.reclamation = reclamation;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public String getAttachmentPath() {
+        return attachmentPath;
+    }
+
+    public void setAttachmentPath(String attachmentPath) {
+        this.attachmentPath = attachmentPath;
     }
 }

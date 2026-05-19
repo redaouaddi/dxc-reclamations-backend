@@ -22,10 +22,14 @@ public class EquipeServiceImpl implements EquipeService {
 
     private final EquipeRepository equipeRepository;
     private final UserRepository userRepository;
+    private final com.dxc.gdr.dao.ReclamationRepository reclamationRepository;
 
-    public EquipeServiceImpl(EquipeRepository equipeRepository, UserRepository userRepository) {
+    public EquipeServiceImpl(EquipeRepository equipeRepository, 
+                             UserRepository userRepository,
+                             com.dxc.gdr.dao.ReclamationRepository reclamationRepository) {
         this.equipeRepository = equipeRepository;
         this.userRepository = userRepository;
+        this.reclamationRepository = reclamationRepository;
     }
 
     // ─── ADMIN : Créer une équipe et lui associer un chef ─────────────────────
@@ -39,12 +43,23 @@ public class EquipeServiceImpl implements EquipeService {
             throw new BadRequestException("Cet utilisateur est déjà chef de l'équipe : " + e.getNom());
         });
 
+        // NOUVEAU : Vérifier que le chef n'est pas un agent dans une équipe
+        if (chef.getEquipe() != null) {
+            throw new BadRequestException("Cet utilisateur est déjà un agent dans l'équipe : " + chef.getEquipe().getNom() + ". Retirez-le d'abord de son équipe actuelle.");
+        }
+
         Equipe equipe = new Equipe(request.getNom().trim(), chef);
         equipe = equipeRepository.save(equipe);
 
         if (request.getAgentIds() != null && !request.getAgentIds().isEmpty()) {
             List<User> agentsToAssign = userRepository.findAllById(request.getAgentIds());
             for (User agent : agentsToAssign) {
+                // Vérifier que l'agent n'est pas déjà chef d'une équipe
+                final Long agentId = agent.getId();
+                equipeRepository.findByChefEquipeId(agentId).ifPresent(e -> {
+                    throw new BadRequestException("L'utilisateur " + agent.getEmail() + " est déjà chef de l'équipe : " + e.getNom());
+                });
+
                 if (agent.getEquipe() == null) {
                     agent.setEquipe(equipe);
                     if (!equipe.getAgents().contains(agent)) {
@@ -62,11 +77,9 @@ public class EquipeServiceImpl implements EquipeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EquipeResponse> listerEquipes() {
-        return equipeRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public org.springframework.data.domain.Page<EquipeResponse> listerEquipes(org.springframework.data.domain.Pageable pageable) {
+        return equipeRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     // ─── ADMIN : Modifier le nom et le chef d'une équipe ─────────────────────
@@ -83,6 +96,12 @@ public class EquipeServiceImpl implements EquipeService {
             equipeRepository.findByChefEquipeId(nouveauChef.getId()).ifPresent(e -> {
                 throw new BadRequestException("Cet utilisateur est déjà chef de l'équipe : " + e.getNom());
             });
+
+            // NOUVEAU : Vérifier que le nouveau chef n'est pas un agent
+            if (nouveauChef.getEquipe() != null) {
+                throw new BadRequestException("Cet utilisateur est déjà un agent dans l'équipe : " + nouveauChef.getEquipe().getNom() + ". Retirez-le d'abord de son équipe actuelle.");
+            }
+
             equipe.setChefEquipe(nouveauChef);
         }
 
@@ -103,6 +122,11 @@ public class EquipeServiceImpl implements EquipeService {
         if (agent.getEquipe() != null && !agent.getEquipe().getId().equals(equipeId)) {
             throw new BadRequestException("Cet agent appartient déjà à l'équipe : " + agent.getEquipe().getNom());
         }
+
+        // NOUVEAU : Vérifier que l'agent n'est pas chef d'une équipe
+        equipeRepository.findByChefEquipeId(agentId).ifPresent(e -> {
+            throw new BadRequestException("Cet utilisateur est déjà chef de l'équipe : " + e.getNom() + ". Il ne peut pas être ajouté comme agent.");
+        });
 
         agent.setEquipe(equipe);
         if (!equipe.getAgents().contains(agent)) {
@@ -168,11 +192,42 @@ public class EquipeServiceImpl implements EquipeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EquipeResponse.AgentResponse> listerAgentsLibres() {
-        return userRepository.findByRoleAndEquipeIsNull("AGENT")
-                .stream()
-                .map(this::toAgentResponse)
-                .collect(Collectors.toList());
+    public org.springframework.data.domain.Page<EquipeResponse.AgentResponse> listerAgentsLibres(org.springframework.data.domain.Pageable pageable) {
+        return userRepository.findByRoleAndEquipeIsNull("AGENT", pageable)
+                .map(this::toAgentResponse);
+    }
+
+    @Override
+    public void supprimerEquipe(Long id, Long targetTeamId) {
+        Equipe equipe = equipeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Equipe introuvable"));
+
+        // Récupérer les réclamations assignées
+        List<com.dxc.gdr.model.Reclamation> reclamations = reclamationRepository.findByEquipeAssigneeId(id);
+
+        if (!reclamations.isEmpty()) {
+            if (targetTeamId == null) {
+                throw new BadRequestException("Impossible de supprimer cette équipe : elle possède encore " + reclamations.size() + " réclamation(s) assignée(s). Veuillez les réassigner d'abord.");
+            }
+
+            // Réassigner les réclamations à l'équipe cible
+            Equipe targetTeam = equipeRepository.findById(targetTeamId)
+                    .orElseThrow(() -> new NotFoundException("Équipe cible introuvable"));
+
+            for (com.dxc.gdr.model.Reclamation reclamation : reclamations) {
+                reclamation.setEquipeAssignee(targetTeam);
+                reclamationRepository.save(reclamation);
+            }
+        }
+
+        // Délier les agents
+        List<User> agents = userRepository.findByEquipeId(id);
+        for (User agent : agents) {
+            agent.setEquipe(null);
+            userRepository.save(agent);
+        }
+
+        equipeRepository.delete(equipe);
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────
@@ -204,6 +259,11 @@ public class EquipeServiceImpl implements EquipeService {
 
         response.setAgents(agents);
         response.setNombreAgents(agents.size());
+
+        // Compter les réclamations
+        List<com.dxc.gdr.model.Reclamation> recs = reclamationRepository.findByEquipeAssigneeId(equipe.getId());
+        response.setNombreReclamations(recs.size());
+
         return response;
     }
 

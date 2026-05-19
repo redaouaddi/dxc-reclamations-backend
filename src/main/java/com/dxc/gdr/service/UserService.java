@@ -103,10 +103,9 @@ public class UserService {
     }
 
 
-    public List<UserDto> getAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toDto)
-                .toList();
+    public org.springframework.data.domain.Page<UserDto> getAll(org.springframework.data.domain.Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(userMapper::toDto);
     }
 
     public void softDelete(Long id) {
