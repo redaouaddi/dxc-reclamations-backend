@@ -1,9 +1,11 @@
 package com.dxc.gdr.config;
 
 import com.dxc.gdr.dao.AccessRepository;
+import com.dxc.gdr.dao.AuditLogRepository;
 import com.dxc.gdr.dao.EquipeRepository;
 import com.dxc.gdr.dao.ReclamationRepository;
 import com.dxc.gdr.dao.UserRepository;
+import com.dxc.gdr.service.AuditLogService;
 import com.dxc.gdr.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -24,6 +26,8 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired private UserRepository userRepository;
     @Autowired private EquipeRepository equipeRepository;
     @Autowired private ReclamationRepository reclamationRepository;
+    @Autowired private AuditLogRepository auditLogRepository;
+    @Autowired private AuditLogService auditLogService;
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @Override
@@ -142,6 +146,41 @@ public class DataInitializer implements CommandLineRunner {
             rec.setDateMiseAJour(java.time.LocalDateTime.now());
             reclamationRepository.save(rec);
             System.out.println("✅ Réclamation de test REC-TEST-001 créée et assignée à Team Support.");
+        }
+
+        // 5. JOURNAL D'AUDIT — exemples si vide
+        if (auditLogRepository.count() == 0) {
+            auditLogService.record(
+                    "admin@dxc.com",
+                    "Admin DXC",
+                    "ADMIN",
+                    "CONNEXION",
+                    "AUTH",
+                    null,
+                    "Connexion administrateur",
+                    "127.0.0.1"
+            );
+            auditLogService.record(
+                    "admin@dxc.com",
+                    "Admin DXC",
+                    "ADMIN",
+                    "CREATION_UTILISATEUR",
+                    "USER",
+                    "2",
+                    "Création du compte agent@dxc.com",
+                    "127.0.0.1"
+            );
+            auditLogService.record(
+                    "agent@dxc.com",
+                    "Agent DXC",
+                    "AGENT",
+                    "MODIFICATION_RECLAMATION",
+                    "RECLAMATION",
+                    "REC-TEST-001",
+                    "Mise à jour du statut de la réclamation",
+                    "127.0.0.1"
+            );
+            System.out.println("✅ Entrées d'audit de démonstration créées.");
         }
     }
 

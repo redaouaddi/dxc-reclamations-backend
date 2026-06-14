@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Data files ###
+src/main/resources/seed_data.sql
+app.log

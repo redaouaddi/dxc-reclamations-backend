@@ -26,6 +26,12 @@ public class AdminUserController {
         return userService.createUser(request);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('LIRE_UTILISATEURS') or hasRole('ADMIN')")
+    public UserDto getUserById(@PathVariable Long id) {
+        return userService.getById(id);
+    }
+
 
     @PutMapping("/{id}/roles")
     @PreAuthorize("hasAuthority('MODIFIER_UTILISATEURS') or hasRole('ADMIN')")

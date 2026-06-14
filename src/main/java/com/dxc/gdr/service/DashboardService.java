@@ -23,18 +23,24 @@ public class DashboardService {
         this.userRepository = userRepository;
     }
 
-    public DashboardStatsDto getDashboardStats() {
+    private boolean noFilters(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
+        return year == null && month == null && priorite == null && equipeId == null;
+    }
+
+    public DashboardStatsDto getDashboardStats(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
 
         long usersCount = userRepository.count();
-        long reclamationsCount = reclamationRepository.count();
+        long reclamationsCount, enCoursCount, slaRespecteCount;
 
-        long enCoursCount = reclamationRepository.countByStatut(
-                ReclamationStatus.EN_COURS
-        );
-
-        long slaRespecteCount = reclamationRepository.countBySlaStatus(
-                SlaStatus.RESPECTE
-        );
+        if (noFilters(year, month, priorite, equipeId)) {
+            reclamationsCount = reclamationRepository.count();
+            enCoursCount = reclamationRepository.countByStatut(ReclamationStatus.EN_COURS);
+            slaRespecteCount = reclamationRepository.countBySlaStatus(SlaStatus.RESPECTE);
+        } else {
+            reclamationsCount = reclamationRepository.countFiltered(year, month, priorite, equipeId);
+            enCoursCount = reclamationRepository.countByStatutFiltered(ReclamationStatus.EN_COURS, year, month, priorite, equipeId);
+            slaRespecteCount = reclamationRepository.countBySlaStatusFiltered(SlaStatus.RESPECTE, year, month, priorite, equipeId);
+        }
 
         double slaRespecte = 0;
 
@@ -52,21 +58,14 @@ public class DashboardService {
         );
     }
 
-    public List<ChartDataDto> getReclamationsByStatus() {
+    public List<ChartDataDto> getReclamationsByStatus(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
 
-        List<Object[]> results = reclamationRepository.countByStatus();
-
-        return results.stream()
-                .map(r -> new ChartDataDto(
-                        r[0].toString(),
-                        ((Number) r[1]).longValue()
-                ))
-                .toList();
-    }
-
-    public List<ChartDataDto> getReclamationsByPriorite() {
-
-        List<Object[]> results = reclamationRepository.countByPriorite();
+        List<Object[]> results;
+        if (noFilters(year, month, priorite, equipeId)) {
+            results = reclamationRepository.countByStatus();
+        } else {
+            results = reclamationRepository.countByStatusGroupFiltered(year, month, priorite, equipeId);
+        }
 
         return results.stream()
                 .map(r -> new ChartDataDto(
@@ -76,9 +75,31 @@ public class DashboardService {
                 .toList();
     }
 
-    public List<ChartDataDto> getReclamationsByMonth() {
+    public List<ChartDataDto> getReclamationsByPriorite(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
 
-        List<Object[]> results = reclamationRepository.countByMonth();
+        List<Object[]> results;
+        if (noFilters(year, month, priorite, equipeId)) {
+            results = reclamationRepository.countByPriorite();
+        } else {
+            results = reclamationRepository.countByPrioriteGroupFiltered(year, month, priorite, equipeId);
+        }
+
+        return results.stream()
+                .map(r -> new ChartDataDto(
+                        r[0].toString(),
+                        ((Number) r[1]).longValue()
+                ))
+                .toList();
+    }
+
+    public List<ChartDataDto> getReclamationsByMonth(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
+
+        List<Object[]> results;
+        if (noFilters(year, month, priorite, equipeId)) {
+            results = reclamationRepository.countByMonth();
+        } else {
+            results = reclamationRepository.countByMonthGroupFiltered(year, month, priorite, equipeId);
+        }
 
         return results.stream()
                 .map(r -> new ChartDataDto(
@@ -88,9 +109,14 @@ public class DashboardService {
                 .toList();
     }
 
-    public List<ChartDataDto> getReclamationsByCategorie() {
+    public List<ChartDataDto> getReclamationsByCategorie(Integer year, Integer month, com.dxc.gdr.model.ReclamationPriority priorite, Long equipeId) {
 
-        List<Object[]> results = reclamationRepository.countByCategorie();
+        List<Object[]> results;
+        if (noFilters(year, month, priorite, equipeId)) {
+            results = reclamationRepository.countByCategorie();
+        } else {
+            results = reclamationRepository.countByCategorieGroupFiltered(year, month, priorite, equipeId);
+        }
 
         return results.stream()
                 .map(r -> new ChartDataDto(

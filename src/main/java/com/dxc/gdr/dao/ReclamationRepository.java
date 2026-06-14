@@ -55,4 +55,59 @@ public interface ReclamationRepository extends JpaRepository<Reclamation, Long> 
     java.util.List<Reclamation> findByEquipeAssigneeId(Long teamId);
 
     org.springframework.data.domain.Page<Reclamation> findByEquipeAssigneeIdAndStatutIn(Long teamId, java.util.Collection<ReclamationStatus> statuts, org.springframework.data.domain.Pageable pageable);
+
+    // ===== FILTERED QUERIES =====
+
+    @Query("SELECT COUNT(r) FROM Reclamation r WHERE " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId)")
+    long countFiltered(@Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT COUNT(r) FROM Reclamation r WHERE r.statut = :statut AND " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId)")
+    long countByStatutFiltered(@Param("statut") ReclamationStatus statut, @Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT COUNT(r) FROM Reclamation r WHERE r.slaStatus = :slaStatus AND " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId)")
+    long countBySlaStatusFiltered(@Param("slaStatus") SlaStatus slaStatus, @Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT r.statut, COUNT(r) FROM Reclamation r WHERE " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId) " +
+           "GROUP BY r.statut")
+    List<Object[]> countByStatusGroupFiltered(@Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT r.priorite, COUNT(r) FROM Reclamation r WHERE " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId) " +
+           "GROUP BY r.priorite")
+    List<Object[]> countByPrioriteGroupFiltered(@Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT r.categorie, COUNT(r) FROM Reclamation r WHERE " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId) " +
+           "GROUP BY r.categorie")
+    List<Object[]> countByCategorieGroupFiltered(@Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
+
+    @Query("SELECT MONTH(r.dateCreation), COUNT(r) FROM Reclamation r WHERE " +
+           "(:year IS NULL OR YEAR(r.dateCreation) = :year) AND " +
+           "(:month IS NULL OR MONTH(r.dateCreation) = :month) AND " +
+           "(:priorite IS NULL OR r.priorite = :priorite) AND " +
+           "(:teamId IS NULL OR r.equipeAssignee.id = :teamId) " +
+           "GROUP BY MONTH(r.dateCreation) ORDER BY MONTH(r.dateCreation)")
+    List<Object[]> countByMonthGroupFiltered(@Param("year") Integer year, @Param("month") Integer month, @Param("priorite") com.dxc.gdr.model.ReclamationPriority priorite, @Param("teamId") Long teamId);
 }

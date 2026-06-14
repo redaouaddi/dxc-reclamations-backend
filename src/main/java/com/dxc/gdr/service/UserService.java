@@ -73,6 +73,12 @@ public class UserService {
         return userMapper.toDto(saved);
     }
 
+    public UserDto getById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable."));
+        return userMapper.toDto(user);
+    }
+
     public UserDto updateRoles(Long id, UserDto dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable."));

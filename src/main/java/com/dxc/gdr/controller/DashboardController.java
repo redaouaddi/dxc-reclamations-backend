@@ -18,27 +18,47 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
     @GetMapping("/reclamations-status")
-    public List<ChartDataDto> getStatusChart(){
-        return dashboardService.getReclamationsByStatus();
+    public List<ChartDataDto> getStatusChart(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer month,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.dxc.gdr.model.ReclamationPriority priorite,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long equipeId){
+        return dashboardService.getReclamationsByStatus(year, month, priorite, equipeId);
     }
 
     @GetMapping("/reclamations-priorite")
-    public List<ChartDataDto> getPrioriteChart(){
-        return dashboardService.getReclamationsByPriorite();
+    public List<ChartDataDto> getPrioriteChart(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer month,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.dxc.gdr.model.ReclamationPriority priorite,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long equipeId){
+        return dashboardService.getReclamationsByPriorite(year, month, priorite, equipeId);
     }
 
     @GetMapping("/reclamations-month")
-    public List<ChartDataDto> getMonthChart(){
-        return dashboardService.getReclamationsByMonth();
+    public List<ChartDataDto> getMonthChart(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer month,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.dxc.gdr.model.ReclamationPriority priorite,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long equipeId){
+        return dashboardService.getReclamationsByMonth(year, month, priorite, equipeId);
     }
 
     @GetMapping("/reclamations-categorie")
-    public List<ChartDataDto> getCategorieChart(){
-        return dashboardService.getReclamationsByCategorie();
+    public List<ChartDataDto> getCategorieChart(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer month,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.dxc.gdr.model.ReclamationPriority priorite,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long equipeId){
+        return dashboardService.getReclamationsByCategorie(year, month, priorite, equipeId);
     }
 
     @GetMapping("/stats")
-    public DashboardStatsDto getDashboardStats() {
-        return dashboardService.getDashboardStats();
+    public DashboardStatsDto getDashboardStats(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer year,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer month,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) com.dxc.gdr.model.ReclamationPriority priorite,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long equipeId) {
+        return dashboardService.getDashboardStats(year, month, priorite, equipeId);
     }
 }

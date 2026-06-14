@@ -4,7 +4,14 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reclamations")
+@Table(name = "reclamations", indexes = {
+        @Index(name = "idx_reclamation_date", columnList = "dateCreation"),
+        @Index(name = "idx_reclamation_priorite", columnList = "priorite"),
+        @Index(name = "idx_reclamation_equipe", columnList = "equipe_assignee_id"),
+        @Index(name = "idx_reclamation_statut", columnList = "statut"),
+        @Index(name = "idx_reclamation_categorie", columnList = "categorie"),
+        @Index(name = "idx_reclamation_sla_status", columnList = "sla_status")
+})
 public class Reclamation {
 
     @Id
@@ -104,9 +111,9 @@ public class Reclamation {
     }
 
     public Reclamation(Long id, String numeroReclamation, String titre, String description,
-                       ReclamationCategory categorie, ReclamationPriority priorite,
-                       ReclamationStatus statut, LocalDateTime dateCreation,
-                       LocalDateTime dateMiseAJour, User client) {
+            ReclamationCategory categorie, ReclamationPriority priorite,
+            ReclamationStatus statut, LocalDateTime dateCreation,
+            LocalDateTime dateMiseAJour, User client) {
         this.id = id;
         this.numeroReclamation = numeroReclamation;
         this.titre = titre;
@@ -332,4 +339,4 @@ public class Reclamation {
     public void setReouvertureAttachmentPath(String reouvertureAttachmentPath) {
         this.reouvertureAttachmentPath = reouvertureAttachmentPath;
     }
-}
+}
